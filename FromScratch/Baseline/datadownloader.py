@@ -1,5 +1,6 @@
 """
-File used to download dataset
+File used to download dataset Use python datadownloader.py -h
+for more information
 """
 import os
 import tqdm
@@ -21,6 +22,13 @@ logging.basicConfig(level=LOGGING_LEVEL, format=LOGGING_FORMAT)
 
 
 def download_dataset(dataset_name):
+    """
+    Downloads the dataset which is passed as parameter
+    Input:
+    dataset_name: string
+    Returns: None
+    """
+
     logger.info("Downloading {}".format(dataset_name))
     output_path = os.path.join(DATA_FOLDER, DATA_FOLDER_RAW)
 
@@ -53,7 +61,7 @@ def download_dataset(dataset_name):
     logger.info("Files Downloaded Successfully!")
 
 
-def check_existing(dataset_name):
+def already_exists(dataset_name):
     """
     Checks if the raw data exists already
     Returns:
@@ -92,16 +100,10 @@ def check_existing(dataset_name):
                 RAW_FILENAMES[dataset_name]["valid"],
             )
         )
-        ch = input(
-            "Are you sure you want to discard your present files and override? [y/n]: "
-        )
-        if ch.lower() == "y" or ch.lower() == "yes":
-            download_dataset(dataset_name)
-        else:
-            logger.info("Not Downloading dataset as dataset already present")
-            sys.exit(0)
-    else:
-        download_dataset(dataset_name)
+
+        return True
+
+    return False
 
 
 if __name__ == "__main__":
@@ -128,5 +130,15 @@ if __name__ == "__main__":
     if args.force:
         download_dataset(args.dataset)
     else:
-        logger.debug("Downloading : {}".format(args.dataset))
-        check_existing(args.dataset)
+        if already_exists(args.dataset):
+            ch = input(
+                "Are you sure you want to discard your present files and override? [y/n]: "
+            )
+            if ch.lower() == "y" or ch.lower() == "yes":
+                download_dataset(args.dataset)
+            else:
+                logger.info("Not Downloading dataset as dataset already present")
+                sys.exit(0)
+        else:
+            logger.debug("Downloading : {}".format(args.dataset))
+            download_dataset(args.dataset)
