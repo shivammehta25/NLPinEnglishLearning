@@ -8,6 +8,13 @@ import json
 import logging
 import os
 import random
+import spacy
+
+from nltk.corpus import stopwords
+from spacy.lang.en import English
+
+nlp = English()
+nlp.add_pipe(nlp.create_pipe("sentencizer"))  # updated
 
 from tqdm import tqdm
 
@@ -27,6 +34,9 @@ logging.basicConfig(level=LOGGING_LEVEL, format=LOGGING_FORMAT)
 
 INPUT_PATH = os.path.join(DATA_FOLDER, DATA_FOLDER_RAW)
 OUTPUT_PATH = os.path.join(DATA_FOLDER, DATA_FOLDER_PROCESSED)
+
+
+STOP_WORDS = set(stopwords.words("dutch")) | set(stopwords.words("english"))
 
 
 def convert_to_file_without_answers(
@@ -89,6 +99,16 @@ def split_train_valid(dataset_name, split_ratio=0.9):
     ) as questions_file:
         data_paragraphs = paragraphs_file.readlines()
         data_questions = questions_file.readlines()
+
+    logger.debug(
+        "# of Paragraphs: {} # of Questions: {} ".format(
+            len(data_paragraphs), len(data_questions)
+        )
+    )
+
+    assert len(data_paragraphs) == len(
+        data_questions
+    ), "Number of Paragraphs and Questions mismatch"
 
     # Output files
     train_paragraphs_file = open(
@@ -153,7 +173,8 @@ def preprocess_squad(name, mode, filter):
     mode: string -> To replicate sentences based on number of answers or just questions
     """
     logger.debug("PreProcessing SQUAD")
-
+    # TODO: remove from here
+    # split_train_valid(name)
     logger.debug("Loading JSON")
     train_file = load_json(os.path.join(INPUT_PATH, RAW_FILENAMES[name]["train"]))
     test_file = load_json(os.path.join(INPUT_PATH, RAW_FILENAMES[name]["test"]))
@@ -161,7 +182,6 @@ def preprocess_squad(name, mode, filter):
     if mode.upper() == "QUESTION" and not filter:
         convert_to_file_without_answers(train_file, "train")
         convert_to_file_without_answers(test_file, "test")
-
     else:
         filter_sentences_on_answer(train_file, "train")
         filter_sentences_on_answer(test_file, "test")
@@ -170,6 +190,39 @@ def preprocess_squad(name, mode, filter):
     split_train_valid(name)
 
     logger.info("{} Preprocessed".format(name))
+
+
+def extract_filtered_sentences(questionanswers, para):
+    """
+    Method returns filtered sentences from the answers and para for SQUAD
+    """
+    tokenized_paragraph = nlp(para)
+    sentences = [sent.string for sent in tokenized_paragraph.sents]
+
+    filtered_sentences = set()
+
+    # This iterates over every answer in question
+    for answer in questionanswers["answers"]:
+        answer_index = answer["answer_start"]
+        length = 0
+
+        # find sentence that has answer and filter them
+        temp_storage = []
+        for sentence in sentences:
+            if answer_index <= length + len(sentence):  # +1 for the index
+                filtered_sentences.add(sentence)
+                break
+            length += len(sentence)
+            temp_storage.append(sentence)
+
+        if not filtered_sentences:
+            print("Length : {}".format(length))
+            print(para, questionanswers)
+            print(sentence)
+            print(temp_storage)
+
+            exit()
+    return " ".join(filtered_sentences)
 
 
 def filter_sentences_on_answer(dataset, dataset_type="train", get_impossible=False):
@@ -181,8 +234,42 @@ def filter_sentences_on_answer(dataset, dataset_type="train", get_impossible=Fal
     dataset_type: string
     get_impossible: boolean
     """
-    # TODO: Do this first
-    raise NotImplementedError
+    if not os.path.exists(os.path.join(OUTPUT_PATH, SQUAD_NAME)):
+        os.makedirs(os.path.join(OUTPUT_PATH, SQUAD_NAME))
+
+    para_output = open(
+        os.path.join(OUTPUT_PATH, SQUAD_NAME, dataset_type + ".paragraphs"), "w"
+    )
+    question_output = open(
+        os.path.join(OUTPUT_PATH, SQUAD_NAME, dataset_type + ".questions"), "w"
+    )
+    dataset = dataset["data"]
+    dataset_size = []
+
+    logger.debug("Starting to filter sentences on answer")
+
+    # This loops iterates over every paragraph
+    for paragraphs in tqdm(dataset):
+        paragraphs = paragraphs["paragraphs"]
+        for i, paragraph in enumerate(paragraphs):
+            para = paragraph["context"]
+            # This loop iterates over every question in para
+            for questionanswers in paragraph["qas"]:
+                if questionanswers["is_impossible"]:
+                    continue
+                question = questionanswers["question"]
+
+                filtered_sentences = extract_filtered_sentences(questionanswers, para)
+
+                para_output.write(filtered_sentences.strip().lower() + "\n")
+                question_output.write(question.strip().lower() + "\n")
+                dataset_size.append(i)
+
+    logger.info("Size of the {} dataset: {}".format(dataset_type, len(dataset_size)))
+    para_output.close()
+    question_output.close()
+
+    logger.debug("Sentences Filtered on Answers")
 
 
 if __name__ == "__main__":
