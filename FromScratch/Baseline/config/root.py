@@ -1,4 +1,13 @@
+"""
+Application level configurations
+"""
+
 import logging
+import random
+
+
+SEED = 1234
+random.seed(SEED)
 
 LOGGING_LEVEL = logging.DEBUG
 LOGGING_FORMAT = (

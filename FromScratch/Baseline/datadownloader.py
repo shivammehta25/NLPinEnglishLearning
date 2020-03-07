@@ -13,9 +13,6 @@ import urllib.request as req
 from config.data import DATA_FOLDER, DATA_FOLDER_RAW, RAW_FILENAMES, DATASETS
 from config.root import LOGGING_LEVEL, LOGGING_FORMAT
 
-CURRENT_FILE_PATH = os.path.abspath(__file__)
-CURRENT_WORKING_DIRECTORY = os.path.abspath(os.getcwd())
-
 # Initialize logger for this file
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=LOGGING_LEVEL, format=LOGGING_FORMAT)

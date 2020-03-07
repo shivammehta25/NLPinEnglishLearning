@@ -1,3 +1,8 @@
+"""
+The Configurations Related to and Dataset and their properties
+like local filenames and URLs
+"""
+
 DATA_FOLDER = "data"
 DATA_FOLDER_RAW = "raw"
 DATA_FOLDER_PROCESSED = "processed"
@@ -6,9 +11,11 @@ RAW_FILENAMES = {
     "SQUAD": {
         "train": "squad_train.json",
         "test": "squad_test.json",
-        "valid": "valid.json",
+        "valid": "squad_valid.json",
     }
 }
+
+SQUAD_NAME = "SQUAD"
 
 DATASETS = {
     "SQUAD": {
