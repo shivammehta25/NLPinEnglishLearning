@@ -8,25 +8,20 @@ import json
 import logging
 import os
 import random
+
 import spacy
-
-from nltk.corpus import stopwords
-from spacy.lang.en import English
-
-nlp = English()
-nlp.add_pipe(nlp.create_pipe("sentencizer"))  # updated
-
 from tqdm import tqdm
 
 from config.data import (
     DATA_FOLDER,
     DATA_FOLDER_PROCESSED,
     DATA_FOLDER_RAW,
-    RAW_FILENAMES,
     DATASETS,
+    RAW_FILENAMES,
+    SQUAD_NAME,
 )
 from config.root import LOGGING_FORMAT, LOGGING_LEVEL
-from config.data import SQUAD_NAME
+from utils import nlp_sentence
 
 # Initialize logger for this file
 logger = logging.getLogger(__name__)
@@ -34,9 +29,6 @@ logging.basicConfig(level=LOGGING_LEVEL, format=LOGGING_FORMAT)
 
 INPUT_PATH = os.path.join(DATA_FOLDER, DATA_FOLDER_RAW)
 OUTPUT_PATH = os.path.join(DATA_FOLDER, DATA_FOLDER_PROCESSED)
-
-
-STOP_WORDS = set(stopwords.words("dutch")) | set(stopwords.words("english"))
 
 
 def convert_to_file_without_answers(
@@ -196,7 +188,7 @@ def extract_filtered_sentences(questionanswers, para):
     """
     Method returns filtered sentences from the answers and para for SQUAD
     """
-    tokenized_paragraph = nlp(para)
+    tokenized_paragraph = nlp_sentence(para)
     sentences = [sent.string for sent in tokenized_paragraph.sents]
 
     filtered_sentences = set()
@@ -207,21 +199,16 @@ def extract_filtered_sentences(questionanswers, para):
         length = 0
 
         # find sentence that has answer and filter them
-        temp_storage = []
         for sentence in sentences:
-            if answer_index <= length + len(sentence):  # +1 for the index
-                filtered_sentences.add(sentence)
+            if answer_index <= length + len(sentence):
+                filtered_sentences.add(sentence.replace("\n", " ").strip())
                 break
             length += len(sentence)
-            temp_storage.append(sentence)
 
         if not filtered_sentences:
             print("Length : {}".format(length))
-            print(para, questionanswers)
-            print(sentence)
-            print(temp_storage)
+            raise Exception("One of the Answers had no sentence please check the data")
 
-            exit()
     return " ".join(filtered_sentences)
 
 
@@ -263,6 +250,7 @@ def filter_sentences_on_answer(dataset, dataset_type="train", get_impossible=Fal
 
                 para_output.write(filtered_sentences.strip().lower() + "\n")
                 question_output.write(question.strip().lower() + "\n")
+
                 dataset_size.append(i)
 
     logger.info("Size of the {} dataset: {}".format(dataset_type, len(dataset_size)))
