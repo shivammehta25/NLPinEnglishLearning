@@ -38,14 +38,18 @@ def load_dataset(
     use_glove=True,
     source_vocab=45000,
     target_vocab=28000,
-    batch_size=64,
+    batch_size=256,
 ):
     """
     Method Loads the dataset from location and returns three iterators and SRC and TRG fields
     """
     logger.debug("Loading {} dataset".format(dataset_name))
     SRC = data.Field(
-        tokenize=tokenizer, init_token=init_token, eos_token=eos_token, lower=True
+        tokenize=tokenizer,
+        init_token=init_token,
+        eos_token=eos_token,
+        lower=True,
+        include_lengths=True,
     )
     TRG = data.Field(
         tokenize=tokenizer, init_token=init_token, eos_token=eos_token, lower=True

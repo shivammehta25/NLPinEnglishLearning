@@ -3,23 +3,30 @@ Training Code
 """
 import argparse
 import logging
+import time
 
-
-from tqdm import tqdm
 import torch
 import torch.optim as optim
-from config.root import LOGGING_FORMAT, LOGGING_LEVEL, models, seed_all, device
-from dataloader import load_dataset
-from models.VanillaSeq2Seq import VanillaSeq2Seq
-from config.hyperparameters import VANILLA_SEQ2SEQ
+from tqdm import tqdm
 
+from config.hyperparameters import VANILLA_SEQ2SEQ
+from config.root import LOGGING_FORMAT, LOGGING_LEVEL, device, models, seed_all
+from dataloader import load_dataset
 from models.VanillaSeq2Seq import *
+from models.VanillaSeq2Seq import VanillaSeq2Seq
 
 seed_all()
 
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=LOGGING_LEVEL, format=LOGGING_FORMAT)
+
+
+def epoch_time(start_time, end_time):
+    elapsed_time = end_time - start_time
+    elapsed_mins = int(elapsed_time / 60)
+    elapsed_secs = int(elapsed_time - (elapsed_mins * 60))
+    return elapsed_mins, elapsed_secs
 
 
 def train(model, iterator, optimizer, criterion, clip):
@@ -31,7 +38,7 @@ def train(model, iterator, optimizer, criterion, clip):
 
     epoch_loss = 0
 
-    for i, batch in enumerate(iterator):
+    for i, batch in tqdm(enumerate(iterator), total=len(iterator)):
 
         src, src_len = batch.src
         trg = batch.trg
@@ -97,7 +104,7 @@ def train_vanilla_seq2seq(
     clip=1,
     lr=0.001,
     validation=True,
-    epochs=10,
+    epochs=5,
     teacher_forcing=0.0,
 ):
     """
@@ -112,16 +119,19 @@ def train_vanilla_seq2seq(
         target_vocab=VANILLA_SEQ2SEQ["OUTPUT_DIM"],
     )
 
+    INPUT_DIM = len(SRC.vocab)
+    OUTPUT_DIM = len(TRG.vocab)
+
     logger.debug("Initializing Models on {}".format(device))
     enc = Encoder(
-        VANILLA_SEQ2SEQ["INPUT_DIM"],
+        INPUT_DIM,
         VANILLA_SEQ2SEQ["ENC_EMB_DIM"],
         VANILLA_SEQ2SEQ["HID_DIM"],
         VANILLA_SEQ2SEQ["N_LAYERS"],
         VANILLA_SEQ2SEQ["DROPOUT"],
     )
     dec = Decoder(
-        VANILLA_SEQ2SEQ["OUTPUT_DIM"],
+        OUTPUT_DIM,
         VANILLA_SEQ2SEQ["DEC_EMB_DIM"],
         VANILLA_SEQ2SEQ["HID_DIM"],
         VANILLA_SEQ2SEQ["N_LAYERS"],
@@ -144,17 +154,32 @@ def train_vanilla_seq2seq(
 
     best_valid_loss = float("inf")
 
-    for epoch in tqdm(range(epochs)):
+    for epoch in range(epochs):
+        start_time = time.time()
+
         train_loss = train(model, train_iterator, optimizer, criterion, clip)
         valid_loss = evaluate(model, valid_iterator, criterion)
+
+        end_time = time.time()
+        epoch_mins, epoch_secs = epoch_time(start_time, end_time)
 
         if valid_loss < best_valid_loss:
             best_valid_loss = valid_loss
             torch.save(model.state_dict(), "trained_model.pt")
 
-    print(f"Epoch: {epoch+1:02}")
-    print(f"\tTrain Loss: {train_loss:.3f} | Train PPL: {math.exp(train_loss):7.3f}")
-    print(f"\t Val. Loss: {valid_loss:.3f} |  Val. PPL: {math.exp(valid_loss):7.3f}")
+    logger.info(
+        "Epoch: {:02} | Time: {}m {}s".format(epoch + 1, epoch_mins, epoch_secs)
+    )
+    logger.info(
+        "\tTrain Loss: {:.3f} | Train PPL: {:7.3f}".format(
+            train_loss, math.exp(train_loss)
+        )
+    )
+    logger.info(
+        "\t Val. Loss: {:.3f} |  Val. PPL: {:7.3f}".format(
+            valid_loss, math.exp(valid_loss)
+        )
+    )
 
 
 if __name__ == "__main__":

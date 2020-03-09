@@ -1,10 +1,17 @@
 """
 Vanilla Seq2Seq with BiDirection LSTM encoder and decoder
 """
+import logging
 import random
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+from config.root import LOGGING_FORMAT, LOGGING_LEVEL
+
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=LOGGING_LEVEL, format=LOGGING_FORMAT)
 
 
 class Encoder(nn.Module):
@@ -98,8 +105,8 @@ class VanillaSeq2Seq(nn.Module):
     def forward(self, src, src_len, trg, teacher_forcing=0.0):
         encoder_hidden, encoder_cell = self.encoder(src, src_len)
 
-        batch_size = trg.shape[0]
-        trg_len = trg.shape[1]
+        batch_size = src.shape[1]
+        trg_len = trg.shape[0]
         trg_vocab_size = self.decoder.output_dim
 
         outputs = torch.zeros(trg_len, batch_size, trg_vocab_size).to(self.device)
@@ -112,7 +119,7 @@ class VanillaSeq2Seq(nn.Module):
 
             outputs[t] = output
 
-            teacher_forcing = random.random < teacher_forcing
+            teacher_forcing = random.random() < teacher_forcing
 
             if teacher_forcing:
                 input = trg[t]
