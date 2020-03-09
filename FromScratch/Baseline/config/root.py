@@ -7,9 +7,6 @@ import random
 import numpy as np
 import torch
 
-SEED = 1234
-random.seed(SEED)
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
@@ -27,3 +24,6 @@ def seed_all(seed=1234):
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
+
+
+models = (1, "VanillaSeq2Seq")

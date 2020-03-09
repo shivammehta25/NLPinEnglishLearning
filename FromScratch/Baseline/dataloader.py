@@ -16,7 +16,6 @@ from torchtext.data import Field, BucketIterator
 from config.data import DATA_FOLDER, DATA_FOLDER_PROCESSED, DATASETS, SQUAD_NAME
 from config.root import LOGGING_FORMAT, LOGGING_LEVEL, seed_all, device
 
-
 from utils import word_tokenizer
 
 # TODO: Move this to main menu to seed in the starting of application
@@ -30,17 +29,20 @@ logging.basicConfig(level=LOGGING_LEVEL, format=LOGGING_FORMAT)
 FILE_PATH = os.path.join(DATA_FOLDER, DATA_FOLDER_PROCESSED)
 
 
-def load_squad_dataset(
+def load_dataset(
     dataset_name="SQUAD",
     tokenizer=word_tokenizer,
     init_token="<sos>",
     eos_token="<eos>",
     lower=True,
-    use_glove=False,
-    max_size_src=45000,
-    max_size_trg=28000,
+    use_glove=True,
+    source_vocab=45000,
+    target_vocab=28000,
     batch_size=64,
 ):
+    """
+    Method Loads the dataset from location and returns three iterators and SRC and TRG fields
+    """
     logger.debug("Loading {} dataset".format(dataset_name))
     SRC = data.Field(
         tokenize=tokenizer, init_token=init_token, eos_token=eos_token, lower=True
@@ -75,11 +77,11 @@ def load_squad_dataset(
     start_time = time.time()
     if use_glove:
         logger.debug("Using Glove vectors")
-        SRC.build_vocab(train_dataset, max_size=max_size_src, vectors="glove.6B.300d")
-        TRG.build_vocab(train_dataset, max_size=max_size_trg, vectors="glove.6B.300d")
+        SRC.build_vocab(train_dataset, max_size=source_vocab, vectors="glove.6B.300d")
+        TRG.build_vocab(train_dataset, max_size=target_vocab, vectors="glove.6B.300d")
     else:
-        SRC.build_vocab(train_dataset, max_size=max_size_src)
-        TRG.build_vocab(train_dataset, max_size=max_size_trg)
+        SRC.build_vocab(train_dataset, max_size=source_vocab)
+        TRG.build_vocab(train_dataset, max_size=target_vocab)
 
     logger.info(
         "Vocabulary Built! Source Tokens = {} | Target Tokens = {}  \nCreating Iterators".format(
@@ -88,8 +90,18 @@ def load_squad_dataset(
     )
     logger.debug("Time Taken: {:.6f}s".format(time.time() - start_time))
 
-    return BucketIterator.splits(
-        (train_dataset, valid_dataset, test_dataset),
-        batch_size=batch_size,
-        device=device,
+    return (
+        BucketIterator.splits(
+            (train_dataset, valid_dataset, test_dataset),
+            batch_size=batch_size,
+            sort_within_batch=True,
+            sort_key=lambda x: len(x.src),
+            device=device,
+        ),
+        SRC,
+        TRG,
     )
+
+
+if __name__ == "__main__":
+    print(load_dataset())
