@@ -5,6 +5,7 @@ import argparse
 import logging
 import time
 
+import math
 import torch
 import torch.optim as optim
 from tqdm import tqdm
@@ -13,7 +14,6 @@ from config.hyperparameters import VANILLA_SEQ2SEQ
 from config.root import LOGGING_FORMAT, LOGGING_LEVEL, device, models, seed_all
 from dataloader import load_dataset
 from models.VanillaSeq2Seq import *
-from models.VanillaSeq2Seq import VanillaSeq2Seq
 
 seed_all()
 
@@ -44,14 +44,10 @@ def train(model, iterator, optimizer, criterion, clip):
         trg = batch.trg
 
         optimizer.zero_grad()
-
         output = model(src, src_len, trg)
-
         output_dim = output.shape[-1]
-
         output = output[1:].view(-1, output_dim)
         trg = trg[1:].view(-1)
-
         loss = criterion(output, trg)
 
         loss.backward()
@@ -60,7 +56,13 @@ def train(model, iterator, optimizer, criterion, clip):
 
         optimizer.step()
 
-        epoch_loss += loss.item()
+        epoch_loss += loss.detach().item()
+
+        del output
+        del loss
+
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
 
     return epoch_loss / len(iterator)
 
@@ -82,15 +84,13 @@ def evaluate(model, iterator, criterion):
             trg = batch.trg
 
             output = model(src, src_len, trg, 0)
-
             output_dim = output.shape[-1]
-
             output = output[1:].view(-1, output_dim)
             trg = trg[1:].view(-1)
 
             loss = criterion(output, trg)
 
-            epoch_loss += loss.item()
+            epoch_loss += loss.detach().item()
 
     return epoch_loss / len(iterator)
 
@@ -167,19 +167,22 @@ def train_vanilla_seq2seq(
             best_valid_loss = valid_loss
             torch.save(model.state_dict(), "trained_model.pt")
 
-    logger.info(
-        "Epoch: {:02} | Time: {}m {}s".format(epoch + 1, epoch_mins, epoch_secs)
-    )
-    logger.info(
-        "\tTrain Loss: {:.3f} | Train PPL: {:7.3f}".format(
-            train_loss, math.exp(train_loss)
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+        logger.info(
+            "Epoch: {:02} | Time: {}m {}s".format(epoch + 1, epoch_mins, epoch_secs)
         )
-    )
-    logger.info(
-        "\t Val. Loss: {:.3f} |  Val. PPL: {:7.3f}".format(
-            valid_loss, math.exp(valid_loss)
+        logger.info(
+            "\tTrain Loss: {:.3f} | Train PPL: {:7.3f}".format(
+                train_loss, math.exp(train_loss)
+            )
         )
-    )
+        logger.info(
+            "\t Val. Loss: {:.3f} |  Val. PPL: {:7.3f}".format(
+                valid_loss, math.exp(valid_loss)
+            )
+        )
 
 
 if __name__ == "__main__":

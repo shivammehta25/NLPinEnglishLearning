@@ -16,7 +16,7 @@ logging.basicConfig(level=LOGGING_LEVEL, format=LOGGING_FORMAT)
 
 class Encoder(nn.Module):
     """
-    A bidirectional LSTM Encoder
+    A bidirectional GRU Encoder
     Input:
         input_dim: Vocab length of input
         embedding_dim: Dimension of Embeddings
@@ -35,11 +35,11 @@ class Encoder(nn.Module):
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers
         self.embedding = nn.Embedding(input_dim, embedding_dim)
-        self.lstm = nn.LSTM(
+        self.gru = nn.GRU(
             embedding_dim,
             hidden_dim,
             num_layers=n_layers,
-            bidirectional=False,
+            bidirectional=True,
             dropout=dropout,
         )
         self.dropout = nn.Dropout(dropout)
@@ -52,21 +52,21 @@ class Encoder(nn.Module):
 
         packed_embedded = nn.utils.rnn.pack_padded_sequence(embedded, src_len)
 
-        packed_output, (hidden, cell) = self.lstm(packed_embedded)
+        packed_output, hidden = self.gru(packed_embedded)
 
         output, output_lengths = nn.utils.rnn.pad_packed_sequence(packed_output)
 
-        return hidden, cell
+        return hidden
 
 
 class Decoder(nn.Module):
     """
-    A Decoder LSTM Decoder
+    A Decoder GRU Decoder
     Input:
         output_dim: Vocab length of the output
         embedding_dim: Decoder Embedding Dimension
-        hidden_dim: Hidden Dimensions of the LSTM Layer
-        n_layer: Number of layer for LSTM
+        hidden_dim: Hidden Dimensions of the GRU Layer
+        n_layer: Number of layer for GRU
         dropout: Dropout Applied
     Output:
         prediction: Output of the Fully connected layer
@@ -78,17 +78,19 @@ class Decoder(nn.Module):
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers
         self.embedding = nn.Embedding(output_dim, embedding_dim)
-        self.lstm = nn.LSTM(embedding_dim, hidden_dim, n_layers, dropout=dropout)
-        self.fc_out = nn.Linear(hidden_dim, output_dim)
+        self.gru = nn.GRU(
+            embedding_dim, 2 * hidden_dim, num_layers=n_layers, dropout=dropout
+        )
+        self.fc_out = nn.Linear(2 * hidden_dim, output_dim)
         self.dropout = nn.Dropout(dropout)
 
-    def forward(self, input, hidden, cell):
+    def forward(self, input, hidden):
         input = input.unsqueeze(0)
         embedded = self.dropout(self.embedding(input))
-        output, (hidden, cell) = self.lstm(embedded, (hidden, cell))
+        output, hidden = self.gru(embedded, (hidden))
         output = self.dropout(self.fc_out(output))
         prediction = output.squeeze(0)
-        return prediction, hidden, cell
+        return prediction, hidden
 
 
 class VanillaSeq2Seq(nn.Module):
@@ -102,8 +104,14 @@ class VanillaSeq2Seq(nn.Module):
         self.decoder = decoder
         self.device = device
 
-    def forward(self, src, src_len, trg, teacher_forcing=0.0):
-        encoder_hidden, encoder_cell = self.encoder(src, src_len)
+    def forward(self, src, src_len, trg, teacher_forcing=0.5):
+        encoder_hidden = self.encoder(src, src_len)
+
+        encoder_hidden = encoder_hidden.view(
+            encoder_hidden.shape[0] // 2,
+            encoder_hidden.shape[1],
+            encoder_hidden.shape[2] * 2,
+        )
 
         batch_size = src.shape[1]
         trg_len = trg.shape[0]
@@ -111,11 +119,11 @@ class VanillaSeq2Seq(nn.Module):
 
         outputs = torch.zeros(trg_len, batch_size, trg_vocab_size).to(self.device)
 
-        # Takse first letter of the input
+        # Take first letter of the input
         input = trg[0, :]
 
         for t in range(1, trg_len):
-            output, hidden, cell = self.decoder(input, encoder_hidden, encoder_cell)
+            output, hidden = self.decoder(input, encoder_hidden)
 
             outputs[t] = output
 

@@ -3,7 +3,6 @@ File used to download dataset Use python datadownloader.py -h
 for more information
 """
 import os
-import tqdm
 import sys
 import argparse
 import logging

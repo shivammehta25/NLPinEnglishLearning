@@ -9,7 +9,6 @@ import logging
 import os
 import random
 
-import spacy
 from tqdm import tqdm
 
 from config.data import (
