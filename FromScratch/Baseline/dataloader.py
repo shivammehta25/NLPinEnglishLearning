@@ -38,7 +38,7 @@ def load_dataset(
     use_glove=True,
     source_vocab=45000,
     target_vocab=28000,
-    batch_size=256,
+    batch_size=64,
 ):
     """
     Method Loads the dataset from location and returns three iterators and SRC and TRG fields

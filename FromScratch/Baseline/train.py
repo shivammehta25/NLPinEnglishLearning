@@ -124,6 +124,7 @@ def initialize_vanillaSeq2Seq(dataset_name):
         dataset_name,
         source_vocab=VANILLA_SEQ2SEQ["INPUT_DIM"],
         target_vocab=VANILLA_SEQ2SEQ["OUTPUT_DIM"],
+        batch_size=VANILLA_SEQ2SEQ["BATCHSIZE"],
     )
 
     INPUT_DIM = len(SRC.vocab)

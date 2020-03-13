@@ -9,4 +9,5 @@ VANILLA_SEQ2SEQ = {
     "ENC_EMB_DIM": 300,
     "HID_DIM": 600,
     "DROPOUT": 0.7,
+    "BATCHSIZE": 64,
 }
