@@ -5,13 +5,21 @@ import argparse
 import logging
 import time
 
+import os
 import math
 import torch
 import torch.optim as optim
 from tqdm import tqdm
 
 from config.hyperparameters import VANILLA_SEQ2SEQ
-from config.root import LOGGING_FORMAT, LOGGING_LEVEL, device, models, seed_all
+from config.root import (
+    LOGGING_FORMAT,
+    LOGGING_LEVEL,
+    device,
+    models,
+    seed_all,
+    TRAINED_MODEL_PATH,
+)
 from dataloader import load_dataset
 from models.VanillaSeq2Seq import *
 
@@ -29,7 +37,7 @@ def epoch_time(start_time, end_time):
     return elapsed_mins, elapsed_secs
 
 
-def train(model, iterator, optimizer, criterion, clip):
+def train(model, iterator, optimizer, criterion, clip, teacher_forcing=0.5):
     """
     Generic Training Method
     """
@@ -44,7 +52,7 @@ def train(model, iterator, optimizer, criterion, clip):
         trg = batch.trg
 
         optimizer.zero_grad()
-        output = model(src, src_len, trg)
+        output = model(src, src_len, trg, teacher_forcing)
         output_dim = output.shape[-1]
         output = output[1:].view(-1, output_dim)
         trg = trg[1:].view(-1)
@@ -58,9 +66,12 @@ def train(model, iterator, optimizer, criterion, clip):
 
         epoch_loss += loss.detach().item()
 
+        # Throwing GPU out of memory on Colab
         del output
         del loss
 
+    # Force emptying the GPU caches reduces runtime but effective to
+    # save space on GPU at Colab
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
 
@@ -90,13 +101,51 @@ def evaluate(model, iterator, criterion):
 
             loss = criterion(output, trg)
 
-            epoch_loss += loss.detach().item()
+            epoch_loss += loss.item()
 
     return epoch_loss / len(iterator)
 
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+
+def init_weights(m):
+    for name, param in m.named_parameters():
+        if "weight" in name:
+            nn.init.normal_(param.data, mean=0, std=0.01)
+        else:
+            nn.init.constant_(param.data, 0)
+
+
+def initialize_vanillaSeq2Seq(dataset_name):
+    logger.debug("Initializing Datasets...")
+    (train_iterator, valid_iterator, test_iterator), SRC, TRG = load_dataset(
+        dataset_name,
+        source_vocab=VANILLA_SEQ2SEQ["INPUT_DIM"],
+        target_vocab=VANILLA_SEQ2SEQ["OUTPUT_DIM"],
+    )
+
+    INPUT_DIM = len(SRC.vocab)
+    OUTPUT_DIM = len(TRG.vocab)
+
+    logger.debug("Initializing Models on {}".format(device))
+    enc = Encoder(
+        INPUT_DIM,
+        VANILLA_SEQ2SEQ["ENC_EMB_DIM"],
+        VANILLA_SEQ2SEQ["HID_DIM"],
+        VANILLA_SEQ2SEQ["DROPOUT"],
+    )
+    attn = Attention(VANILLA_SEQ2SEQ["HID_DIM"])
+    dec = Decoder(
+        OUTPUT_DIM,
+        VANILLA_SEQ2SEQ["DEC_EMB_DIM"],
+        VANILLA_SEQ2SEQ["HID_DIM"],
+        VANILLA_SEQ2SEQ["DROPOUT"],
+        attn,
+    )
+    model = VanillaSeq2Seq(enc, dec, device).to(device)
+    return model, SRC, TRG, train_iterator, valid_iterator, test_iterator
 
 
 def train_vanilla_seq2seq(
@@ -113,32 +162,11 @@ def train_vanilla_seq2seq(
 
     logger.debug("Data Loading")
 
-    (train_iterator, valid_iterator, test_iterator), SRC, TRG = load_dataset(
-        dataset_name,
-        source_vocab=VANILLA_SEQ2SEQ["INPUT_DIM"],
-        target_vocab=VANILLA_SEQ2SEQ["OUTPUT_DIM"],
+    model, SRC, TRG, train_iterator, valid_iterator, _ = initialize_vanillaSeq2Seq(
+        dataset_name
     )
 
-    INPUT_DIM = len(SRC.vocab)
-    OUTPUT_DIM = len(TRG.vocab)
-
-    logger.debug("Initializing Models on {}".format(device))
-    enc = Encoder(
-        INPUT_DIM,
-        VANILLA_SEQ2SEQ["ENC_EMB_DIM"],
-        VANILLA_SEQ2SEQ["HID_DIM"],
-        VANILLA_SEQ2SEQ["N_LAYERS"],
-        VANILLA_SEQ2SEQ["DROPOUT"],
-    )
-    dec = Decoder(
-        OUTPUT_DIM,
-        VANILLA_SEQ2SEQ["DEC_EMB_DIM"],
-        VANILLA_SEQ2SEQ["HID_DIM"],
-        VANILLA_SEQ2SEQ["N_LAYERS"],
-        VANILLA_SEQ2SEQ["DROPOUT"],
-    )
-
-    model = VanillaSeq2Seq(enc, dec, device).to(device)
+    model.apply(init_weights)
 
     logger.info(
         "The model has {:,} trainable parameters".format(count_parameters(model))
@@ -165,7 +193,9 @@ def train_vanilla_seq2seq(
 
         if valid_loss < best_valid_loss:
             best_valid_loss = valid_loss
-            torch.save(model.state_dict(), "trained_model.pt")
+            torch.save(
+                model, os.path.join(TRAINED_MODEL_PATH, "{}.pt".format(models[1]))
+            )
 
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
@@ -186,51 +216,47 @@ def train_vanilla_seq2seq(
 
 
 if __name__ == "__main__":
-    # parser = argparse.ArgumentParser(
-    #     description="Utility to Train datasets {}".format(models)
-    # )
-    # parser.add_argument(
-    #     "-d", "--dataset", default="SQUAD", help="which dataset to train on"
-    # )
-    # parser.add_argument(
-    #     "-m", "--model", default=1, help="Which Model to Train", type=int
-    # )
-    # parser.add_argument(
-    #     "-c", "--clipnorm", default=1, help="Value to clip gradients", type=int
-    # )
-    # parser.add_argument(
-    #     "-l",
-    #     "--learningrate",
-    #     help="Learning rate of Adam Optmizer",
-    #     type=float,
-    #     default=0.001,
-    # )
-    # parser.add_argument(
-    #     "-v",
-    #     "--validation",
-    #     help="Flag to turn validation on and off",
-    #     default=True,
-    #     action="store_true",
-    # )
-    # parser.add_argument(
-    #     "-e", "--epochs", default=5, help="Number of Epochs to train", type=int
-    # )
-    # parser.add_argument(
-    #     "-t", "--teacherforcing", default=0.5, help="Teacher Forcing", type=int
-    # )
+    parser = argparse.ArgumentParser(
+        description="Utility to Train datasets {}".format(models)
+    )
+    parser.add_argument(
+        "-d", "--dataset", default="SQUAD", help="which dataset to train on"
+    )
+    parser.add_argument(
+        "-m", "--model", default=1, help="Which Model to Train", type=int
+    )
+    parser.add_argument(
+        "-c", "--clipnorm", default=1, help="Value to clip gradients", type=int
+    )
+    parser.add_argument(
+        "-l",
+        "--learningrate",
+        help="Learning rate of Adam Optmizer",
+        type=float,
+        default=0.001,
+    )
+    parser.add_argument(
+        "-v",
+        "--validation",
+        help="Flag to turn validation on and off",
+        default=True,
+        action="store_true",
+    )
+    parser.add_argument(
+        "-e", "--epochs", default=5, help="Number of Epochs to train", type=int
+    )
+    parser.add_argument(
+        "-t", "--teacherforcing", default=0.5, help="Teacher Forcing", type=int
+    )
 
-    # parser.add_argument()
+    args = parser.parse_args()
 
-    # args = parser.parse_args()
-
-    # if args.model == 1:
-    #     train_vanilla_seq2seq(
-    #         args.dataset,
-    #         args.clipnorm,
-    #         args.learningrate,
-    #         args.validation,
-    #         args.epochs,
-    #         args.teacherforcing,
-    #     )
-
-    train_vanilla_seq2seq()
+    if args.model == 1:
+        train_vanilla_seq2seq(
+            args.dataset,
+            args.clipnorm,
+            args.learningrate,
+            args.validation,
+            args.epochs,
+            args.teacherforcing,
+        )

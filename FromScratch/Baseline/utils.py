@@ -11,4 +11,3 @@ nlp_sentence.add_pipe(nlp_sentence.create_pipe("sentencizer"))
 
 def word_tokenizer(sentence):
     return [word.text for word in nlp_word(sentence)]
-

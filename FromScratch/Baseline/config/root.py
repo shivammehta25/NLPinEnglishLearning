@@ -26,4 +26,5 @@ def seed_all(seed=1234):
     torch.backends.cudnn.deterministic = True
 
 
-models = (1, "VanillaSeq2Seq")
+models = {1: "VanillaSeq2Seq"}
+TRAINED_MODEL_PATH = "trained_models"
