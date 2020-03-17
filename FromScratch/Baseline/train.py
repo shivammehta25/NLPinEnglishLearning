@@ -150,14 +150,7 @@ def initialize_vanillaSeq2Seq(dataset_name):
 
 
 def train_vanilla_seq2seq(
-    dataset_name="SQUAD",
-    clip=1,
-    lr=0.001,
-    validation=True,
-    epochs=5,
-    use_trained_model="",
-    train_model_path=os.path.join(TRAINED_MODEL_PATH, "VanillaSeq2Seq.pt"),
-    teacher_forcing=0.0,
+    dataset_name, clip, lr, validation, epochs, train_model_path, teacher_forcing
 ):
     """
     Method to train the Vanilla Seq2Seq
@@ -169,7 +162,7 @@ def train_vanilla_seq2seq(
         dataset_name
     )
 
-    if use_trained_model:
+    if train_model_path:
         logger.debug("Loading Pretrained model")
         model = torch.load(train_model_path)
         model = model.to(device)
@@ -243,6 +236,7 @@ if __name__ == "__main__":
         type=float,
         default=0.001,
     )
+
     parser.add_argument(
         "-v",
         "--validation",
@@ -257,9 +251,9 @@ if __name__ == "__main__":
         "-t", "--teacherforcing", default=0.5, help="Teacher Forcing", type=int
     )
     parser.add_argument(
-        "-tmd",
-        "--trained-model-dir",
-        default=os.path.join(TRAINED_MODEL_PATH, "{}.pt".format(models[1]),
+        "-tmp",
+        "--trained-model-path",
+        default="",
         help="Load the model from the directory",
     )
 
@@ -272,5 +266,6 @@ if __name__ == "__main__":
             args.learningrate,
             args.validation,
             args.epochs,
+            args.trained_model_path,
             args.teacherforcing,
         )
