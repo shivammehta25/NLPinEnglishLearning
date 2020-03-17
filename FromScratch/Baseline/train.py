@@ -155,6 +155,8 @@ def train_vanilla_seq2seq(
     lr=0.001,
     validation=True,
     epochs=5,
+    use_trained_model="",
+    train_model_path=os.path.join(TRAINED_MODEL_PATH, "VanillaSeq2Seq.pt"),
     teacher_forcing=0.0,
 ):
     """
@@ -167,7 +169,12 @@ def train_vanilla_seq2seq(
         dataset_name
     )
 
-    model.apply(init_weights)
+    if use_trained_model:
+        logger.debug("Loading Pretrained model")
+        model = torch.load(train_model_path)
+        model = model.to(device)
+    else:
+        model.apply(init_weights)
 
     logger.info(
         "The model has {:,} trainable parameters".format(count_parameters(model))
@@ -248,6 +255,12 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-t", "--teacherforcing", default=0.5, help="Teacher Forcing", type=int
+    )
+    parser.add_argument(
+        "-tmd",
+        "--trained-model-dir",
+        default=os.path.join(TRAINED_MODEL_PATH, "{}.pt".format(models[1]),
+        help="Load the model from the directory",
     )
 
     args = parser.parse_args()
