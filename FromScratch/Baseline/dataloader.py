@@ -15,6 +15,7 @@ from torchtext.data import Field, BucketIterator
 
 from config.data import DATA_FOLDER, DATA_FOLDER_PROCESSED, DATASETS, SQUAD_NAME
 from config.root import LOGGING_FORMAT, LOGGING_LEVEL, seed_all, device
+from config.hyperparameters import VANILLA_SEQ2SEQ
 
 from utils import word_tokenizer
 
@@ -38,7 +39,7 @@ def load_dataset(
     use_glove=True,
     source_vocab=45000,
     target_vocab=28000,
-    batch_size=64,
+    batch_size=VANILLA_SEQ2SEQ["BATCHSIZE"],
 ):
     """
     Method Loads the dataset from location and returns three iterators and SRC and TRG fields

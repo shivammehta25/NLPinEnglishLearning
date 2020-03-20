@@ -29,6 +29,9 @@ seed_all()
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=LOGGING_LEVEL, format=LOGGING_FORMAT)
 
+if not os.path.exists(TRAINED_MODEL_PATH):
+    os.mkdir(TRAINED_MODEL_PATH)
+
 
 def epoch_time(start_time, end_time):
     elapsed_time = end_time - start_time
