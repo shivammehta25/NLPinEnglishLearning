@@ -65,11 +65,14 @@ class GrammarDaset:
 
         grammar_dataset.question.build_vocab(
             grammar_dataset.trainset,
-            grammar_dataset.testset,
             max_size=MAX_VOCAB,
             vectors="glove.6B.300d",
             unk_init=torch.Tensor.normal_,
         )
+
+        logger.debug("Vocabulary Loaded")
+        grammar_dataset.key.vocab = grammar_dataset.question.vocab
+        grammar_dataset.answer.vocab = grammar_dataset.question.vocab
 
         return grammar_dataset
 
