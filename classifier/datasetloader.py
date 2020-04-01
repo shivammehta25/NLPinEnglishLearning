@@ -71,16 +71,20 @@ class GrammarDaset:
             unk_init=torch.Tensor.normal_,
         )
 
-        logger.debug("Vocabulary Loaded")
         grammar_dataset.key.vocab = grammar_dataset.question.vocab
         grammar_dataset.answer.vocab = grammar_dataset.question.vocab
 
+        grammar_dataset.label.build_vocab(grammar_dataset.trainset)
+
+        logger.debug("Vocabulary Loaded")
         grammar_dataset.train_iterator, grammar_dataset.test_iterator = data.BucketIterator.splits(
             (grammar_dataset.trainset, grammar_dataset.testset),
             batch_size=BATCH_SIZE,
             sort_within_batch=True,
+            sort_key=lambda x: len(x.question) + len(x.key) + len(x.answer),
             device=device,
         )
+        logger.debug("Created Iterators")
 
         return grammar_dataset
 
@@ -90,4 +94,4 @@ if __name__ == "__main__":
     print(vars(dataset.trainset[0]))
 
     for batch in dataset.test_iterator:
-        print(batch.text)
+        print(batch)
