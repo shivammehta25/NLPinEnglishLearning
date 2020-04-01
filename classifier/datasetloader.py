@@ -8,8 +8,8 @@ import os
 import torch
 from torchtext import data, datasets
 from config.data import DATASET_FOLDER, PROCESSED_DATASET, PROCESSED_DATASET_FOLDER
-from config.hyperparameters import MAX_VOCAB
-from config.root import LOGGING_FORMAT, LOGGING_LEVEL
+from config.hyperparameters import MAX_VOCAB, BATCH_SIZE
+from config.root import LOGGING_FORMAT, LOGGING_LEVEL, device
 from utility import tokenizer
 
 # Initialize logger for this file
@@ -36,6 +36,7 @@ class GrammarDaset:
         self.fields = None
         self.trainset = None
         self.testset = None
+        self.train_iterator, self.test_iterator = None, None
 
     @classmethod
     def get_iterators(cls):
@@ -74,9 +75,19 @@ class GrammarDaset:
         grammar_dataset.key.vocab = grammar_dataset.question.vocab
         grammar_dataset.answer.vocab = grammar_dataset.question.vocab
 
+        grammar_dataset.train_iterator, grammar_dataset.test_iterator = data.BucketIterator.splits(
+            (grammar_dataset.trainset, grammar_dataset.testset),
+            batch_size=BATCH_SIZE,
+            sort_within_batch=True,
+            device=device,
+        )
+
         return grammar_dataset
 
 
 if __name__ == "__main__":
     dataset = GrammarDaset.get_iterators()
     print(vars(dataset.trainset[0]))
+
+    for batch in dataset.test_iterator:
+        print(batch.text)
