@@ -1,9 +1,9 @@
 """
 Training script for the model
 """
-
 import argparse
 import logging
+import os
 import time
 
 import torch
@@ -12,15 +12,15 @@ import torch.optim as optim
 from tqdm.auto import tqdm
 
 from config.hyperparameters import (
+    BATCH_SIZE,
     BIDIRECTION,
     DROPOUT,
     EMBEDDING_DIM,
     EPOCHS,
+    FREEZE_EMBEDDINGS,
     HIDDEN_DIM,
     LR,
     N_LAYERS,
-    BATCH_SIZE,
-    FREEZE_EMBEDDINGS,
 )
 from config.root import (
     LOGGING_FORMAT,
@@ -31,7 +31,7 @@ from config.root import (
     seed_all,
 )
 from datasetloader import GrammarDaset
-from helperfunctions import train, evaluate
+from helperfunctions import evaluate, train
 from model import RNNHiddenClassifier
 from utility import categorical_accuracy, epoch_time
 
@@ -97,7 +97,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Utility to train the Model")
 
     parser.add_argument(
-        "-s", "--seed", default=1234, help="Set custom seed for reproducibility"
+        "-s",
+        "--seed",
+        default=1234,
+        help="Set custom seed for reproducibility",
+        type=int,
     )
 
     parser.add_argument(
@@ -112,35 +116,66 @@ if __name__ == "__main__":
         "--bidirectional",
         default=BIDIRECTION,
         help="Makes the model Bidirectional",
+        type=bool,
     )
     parser.add_argument(
-        "-d", "--dropout", default=DROPOUT, help="Dropout count for the model"
+        "-d",
+        "--dropout",
+        default=DROPOUT,
+        help="Dropout count for the model",
+        type=float,
     )
     parser.add_argument(
-        "-e", "--embedding-dim", default=EMBEDDING_DIM, help="Embedding Dimensions"
+        "-e",
+        "--embedding-dim",
+        default=EMBEDDING_DIM,
+        help="Embedding Dimensions",
+        type=int,
     )
     parser.add_argument(
-        "-hd", "--hidden-dim", default=HIDDEN_DIM, help="Hidden dimensions of the RNN"
+        "-hd",
+        "--hidden-dim",
+        default=HIDDEN_DIM,
+        help="Hidden dimensions of the RNN",
+        type=int,
     )
     parser.add_argument(
-        "-l", "--n-layers", default=N_LAYERS, help="Number of layers in RNN"
+        "-l", "--n-layers", default=N_LAYERS, help="Number of layers in RNN", type=int
     )
     parser.add_argument(
-        "-lr", "--learning-rate", default=LR, help="Learning rate of Adam Optimizer"
+        "-lr",
+        "--learning-rate",
+        default=LR,
+        help="Learning rate of Adam Optimizer",
+        type=float,
     )
     parser.add_argument(
-        "-n", "--epochs", default=EPOCHS, help="Number of Epochs to train model"
+        "-n",
+        "--epochs",
+        default=EPOCHS,
+        help="Number of Epochs to train model",
+        type=int,
     )
     parser.add_argument(
         "-batch",
         "--batch_size",
         default=BATCH_SIZE,
         help="Number of Epochs to train model",
+        type=int,
+    )
+
+    parser.add_argument(
+        "-f",
+        "--freeze-embeddings",
+        default=FREEZE_EMBEDDINGS,
+        help="Freeze Embeddings of Model",
+        type=int,
     )
 
     args = parser.parse_args()
 
     seed_all(args.seed)
+    logger.debug(args)
     logger.debug("Custom seed set with: {}".format(args.seed))
 
     logger.info("Loading Dataset")
@@ -159,6 +194,7 @@ if __name__ == "__main__":
             args.n_layers,
             args.bidirectional,
             args.dropout,
+            args.freeze_embeddings,
         )
 
     criterion = nn.CrossEntropyLoss()
@@ -167,6 +203,12 @@ if __name__ == "__main__":
     model = model.to(device)
     criterion = criterion.to(device)
 
+    logger.info(model)
+
+    if not os.path.exists(TRAINED_CLASSIFIER_FOLDER):
+        os.mkdir(TRAINED_CLASSIFIER_FOLDER)
+
+    best_test_loss = float("inf")
     for epoch in range(int(args.epochs)):
         start_time = time.time()
         train_loss, train_acc = train(
@@ -178,9 +220,12 @@ if __name__ == "__main__":
 
         epoch_mins, epoch_secs = epoch_time(start_time, end_time)
 
-        # if valid_loss < best_valid_loss:
-        #     best_valid_loss = valid_loss
-        #     torch.save(model.state_dict(), 'tut2-model.pt')
+        if test_loss < best_test_loss:
+            best_test_loss = test_loss
+            torch.save(
+                model,
+                os.path.join(TRAINED_CLASSIFIER_FOLDER, TRAINED_CLASSIFIER_RNNHIDDEN),
+            )
 
         print(f"Epoch: {epoch+1:02} | Epoch Time: {epoch_mins}m {epoch_secs}s")
         print(f"\tTrain Loss: {train_loss:.3f} | Train Acc: {train_acc*100:.2f}%")

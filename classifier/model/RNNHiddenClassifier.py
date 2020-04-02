@@ -2,8 +2,16 @@
 Model Architecture
 """
 
+import logging
+
 import torch
 import torch.nn as nn
+
+from config.root import LOGGING_FORMAT, LOGGING_LEVEL
+
+# Initialize logger for this file
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=LOGGING_LEVEL, format=LOGGING_FORMAT)
 
 
 class RNNHiddenClassifier(nn.Module):
@@ -30,6 +38,12 @@ class RNNHiddenClassifier(nn.Module):
 
         if freeze_embeddings:
             self.embedding.weight.requires_grad = False
+
+        logger.debug(
+            "Freeze Embeddings Value {}: {}".format(
+                freeze_embeddings, self.embedding.weight.requires_grad
+            )
+        )
 
         self.bidirectional = bidirectional
 

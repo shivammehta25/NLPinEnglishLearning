@@ -29,7 +29,7 @@ class GrammarDaset:
             tokenize=tokenizer, include_lengths=True, eos_token="</k>", init_token="<k>"
         )
         self.answer = data.Field(
-            tokenize=tokenizer, include_lengths=True, eos_token="</k>", init_token="<k>"
+            tokenize=tokenizer, include_lengths=True, eos_token="</a>", init_token="<a>"
         )
         self.label = data.LabelField()
 
