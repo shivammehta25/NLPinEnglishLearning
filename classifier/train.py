@@ -19,7 +19,8 @@ from config.hyperparameters import (
     HIDDEN_DIM,
     LR,
     N_LAYERS,
-    BATCH_SIZE
+    BATCH_SIZE,
+    FREEZE_EMBEDDINGS,
 )
 from config.root import (
     LOGGING_FORMAT,
@@ -45,7 +46,13 @@ def count_parameters(model):
 
 
 def initialize_new_model(
-    dataset, EMBEDDING_DIM, HIDDEN_DIM, N_LAYERS, BIDIRECTION, DROPOUT
+    dataset,
+    EMBEDDING_DIM,
+    HIDDEN_DIM,
+    N_LAYERS,
+    BIDIRECTION,
+    DROPOUT,
+    FREEZE_EMBEDDINGS,
 ):
     """Method to initialise new model, takes in dataset object and hyperparameters as parameter"""
     logger.debug("Initializing Model")
@@ -63,6 +70,7 @@ def initialize_new_model(
         BIDIRECTION,
         DROPOUT,
         PAD_IDX,
+        FREEZE_EMBEDDINGS,
     )
 
     logger.info(

@@ -94,11 +94,3 @@ class GrammarDaset:
         logger.debug("Created Iterators")
 
         return grammar_dataset
-
-
-if __name__ == "__main__":
-    dataset = GrammarDaset.get_iterators()
-    print(vars(dataset.trainset[0]))
-
-    for batch in dataset.test_iterator:
-        print(batch)
