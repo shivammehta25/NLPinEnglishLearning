@@ -76,7 +76,7 @@ if __name__ == "__main__":
     parser.add_argument("-hd", "--hidden-dim", default=HIDDEN_DIM, help="Hidden dimensions of the RNN")
     parser.add_argument("-l", "--n-layers", default=N_LAYERS, help="Number of layers in RNN")
     parser.add_argument("-lr", "--learning-rate", default=LR, help="Learning rate of Adam Optimizer")
-    parser.add_argument("-e", "--epochs", default=EPOCHS, help="Number of Epochs to train model")
+    parser.add_argument("-n", "--epochs", default=EPOCHS, help="Number of Epochs to train model")
 
     args = parser.parse_args()
 
