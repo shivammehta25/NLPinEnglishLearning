@@ -1,21 +1,38 @@
+"""
+Training script for the model
+"""
 
 import argparse
 import logging
+import time
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from tqdm.auto import tqdm
 
-from config.hyperparameters import (BIDIRECTION, DROPOUT, EMBEDDING_DIM,
-                                    HIDDEN_DIM, N_LAYERS, LR, EPOCHS)
-from config.root import (LOGGING_FORMAT, LOGGING_LEVEL,
-                         TRAINED_CLASSIFIER_FOLDER,
-                         TRAINED_CLASSIFIER_RNNHIDDEN, seed_all, device)
+from config.hyperparameters import (
+    BIDIRECTION,
+    DROPOUT,
+    EMBEDDING_DIM,
+    EPOCHS,
+    HIDDEN_DIM,
+    LR,
+    N_LAYERS,
+    BATCH_SIZE
+)
+from config.root import (
+    LOGGING_FORMAT,
+    LOGGING_LEVEL,
+    TRAINED_CLASSIFIER_FOLDER,
+    TRAINED_CLASSIFIER_RNNHIDDEN,
+    device,
+    seed_all,
+)
 from datasetloader import GrammarDaset
+from helperfunctions import train, evaluate
 from model import RNNHiddenClassifier
-from utility import categorical_accuracy
-from helperfunctions import train
+from utility import categorical_accuracy, epoch_time
 
 # Initialize logger for this file
 logger = logging.getLogger(__name__)
@@ -27,17 +44,32 @@ def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
-def initialize_new_model(dataset, EMBEDDING_DIM, HIDDEN_DIM, N_LAYERS, BIDIRECTION, DROPOUT):
+def initialize_new_model(
+    dataset, EMBEDDING_DIM, HIDDEN_DIM, N_LAYERS, BIDIRECTION, DROPOUT
+):
     """Method to initialise new model, takes in dataset object and hyperparameters as parameter"""
     logger.debug("Initializing Model")
-    
+
     VOCAB_SIZE = len(dataset.question.vocab)
     OUTPUT_LAYERS = len(dataset.label.vocab)
     PAD_IDX = dataset.question.vocab.stoi[dataset.question.pad_token]
 
-    model = RNNHiddenClassifier(VOCAB_SIZE, EMBEDDING_DIM, HIDDEN_DIM, OUTPUT_LAYERS, N_LAYERS, BIDIRECTION, DROPOUT, PAD_IDX)
+    model = RNNHiddenClassifier(
+        VOCAB_SIZE,
+        EMBEDDING_DIM,
+        HIDDEN_DIM,
+        OUTPUT_LAYERS,
+        N_LAYERS,
+        BIDIRECTION,
+        DROPOUT,
+        PAD_IDX,
+    )
 
-    logger.info("Model Initialized with {:,} trainiable parameters".format(count_parameters(model)))
+    logger.info(
+        "Model Initialized with {:,} trainiable parameters".format(
+            count_parameters(model)
+        )
+    )
 
     # Initialize pretrained word embeddings
     pretrained_embeddings = dataset.question.vocab.vectors
@@ -57,26 +89,46 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Utility to train the Model")
 
     parser.add_argument(
-        "-s",
-        "--seed",
-        default=1234,
-        help="Set custom seed for reproducibility",
+        "-s", "--seed", default=1234, help="Set custom seed for reproducibility"
     )
 
     parser.add_argument(
         "-m",
         "--model-location",
         default=None,
-        help="Give an already trained model location to use and train more epochs on it"
+        help="Give an already trained model location to use and train more epochs on it",
     )
 
-    parser.add_argument("-b", "--bidirectional", default=BIDIRECTION, help="Makes the model Bidirectional")
-    parser.add_argument("-d", "--dropout", default=DROPOUT, help="Dropout count for the model")    
-    parser.add_argument("-e", "--embedding-dim", default=EMBEDDING_DIM, help="Embedding Dimensions")
-    parser.add_argument("-hd", "--hidden-dim", default=HIDDEN_DIM, help="Hidden dimensions of the RNN")
-    parser.add_argument("-l", "--n-layers", default=N_LAYERS, help="Number of layers in RNN")
-    parser.add_argument("-lr", "--learning-rate", default=LR, help="Learning rate of Adam Optimizer")
-    parser.add_argument("-n", "--epochs", default=EPOCHS, help="Number of Epochs to train model")
+    parser.add_argument(
+        "-b",
+        "--bidirectional",
+        default=BIDIRECTION,
+        help="Makes the model Bidirectional",
+    )
+    parser.add_argument(
+        "-d", "--dropout", default=DROPOUT, help="Dropout count for the model"
+    )
+    parser.add_argument(
+        "-e", "--embedding-dim", default=EMBEDDING_DIM, help="Embedding Dimensions"
+    )
+    parser.add_argument(
+        "-hd", "--hidden-dim", default=HIDDEN_DIM, help="Hidden dimensions of the RNN"
+    )
+    parser.add_argument(
+        "-l", "--n-layers", default=N_LAYERS, help="Number of layers in RNN"
+    )
+    parser.add_argument(
+        "-lr", "--learning-rate", default=LR, help="Learning rate of Adam Optimizer"
+    )
+    parser.add_argument(
+        "-n", "--epochs", default=EPOCHS, help="Number of Epochs to train model"
+    )
+    parser.add_argument(
+        "-batch",
+        "--batch_size",
+        default=BATCH_SIZE,
+        help="Number of Epochs to train model",
+    )
 
     args = parser.parse_args()
 
@@ -85,14 +137,21 @@ if __name__ == "__main__":
 
     logger.info("Loading Dataset")
 
-    dataset = GrammarDaset.get_iterators()
+    dataset = GrammarDaset.get_iterators(args.batch_size)
 
     logger.info("Dataset Loaded Successfully")
 
     if args.model_location:
         model = torch.load(args.model_location)
     else:
-        model = initialize_new_model(dataset, args.embedding_dim, args.hidden_dim, args.n_layers, args.bidirectional, args.dropout)
+        model = initialize_new_model(
+            dataset,
+            args.embedding_dim,
+            args.hidden_dim,
+            args.n_layers,
+            args.bidirectional,
+            args.dropout,
+        )
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=LR)
@@ -100,12 +159,21 @@ if __name__ == "__main__":
     model = model.to(device)
     criterion = criterion.to(device)
 
-    for epoch in range(EPOCHS):
-        train_loss, train_acc = train(model, dataset.train_iterator, optimizer, criterion)
+    for epoch in range(int(args.epochs)):
+        start_time = time.time()
+        train_loss, train_acc = train(
+            model, dataset.train_iterator, optimizer, criterion
+        )
+        test_loss, test_acc = evaluate(model, dataset.test_iterator, criterion)
 
+        end_time = time.time()
 
+        epoch_mins, epoch_secs = epoch_time(start_time, end_time)
 
-    
+        # if valid_loss < best_valid_loss:
+        #     best_valid_loss = valid_loss
+        #     torch.save(model.state_dict(), 'tut2-model.pt')
 
-
-
+        print(f"Epoch: {epoch+1:02} | Epoch Time: {epoch_mins}m {epoch_secs}s")
+        print(f"\tTrain Loss: {train_loss:.3f} | Train Acc: {train_acc*100:.2f}%")
+        print(f"\t Val. Loss: {test_loss:.3f} |  Val. Acc: {test_acc*100:.2f}%")

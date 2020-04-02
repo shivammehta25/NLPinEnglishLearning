@@ -31,7 +31,7 @@ class GrammarDaset:
         self.answer = data.Field(
             tokenize=tokenizer, include_lengths=True, eos_token="</k>", init_token="<k>"
         )
-        self.label = data.LabelField(dtype=torch.float)
+        self.label = data.LabelField()
 
         self.fields = None
         self.trainset = None
@@ -39,7 +39,7 @@ class GrammarDaset:
         self.train_iterator, self.test_iterator = None, None
 
     @classmethod
-    def get_iterators(cls):
+    def get_iterators(cls, batch_size):
         """
         Load dataset and return iterators
         """
@@ -86,7 +86,7 @@ class GrammarDaset:
         logger.debug("Vocabulary Loaded")
         grammar_dataset.train_iterator, grammar_dataset.test_iterator = data.BucketIterator.splits(
             (grammar_dataset.trainset, grammar_dataset.testset),
-            batch_size=BATCH_SIZE,
+            batch_size=batch_size,
             sort_within_batch=True,
             sort_key=lambda x: len(x.question) + len(x.key) + len(x.answer),
             device=device,
