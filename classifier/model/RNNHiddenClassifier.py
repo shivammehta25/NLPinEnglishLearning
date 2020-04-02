@@ -6,7 +6,11 @@ import torch
 import torch.nn as nn
 
 
-class BaseClassifier(nn.Module):
+class RNNHiddenClassifier(nn.Module):
+    """
+    This classifier concatenates the last hidden 
+    """
+
     def __init__(
         self,
         vocab_size,
@@ -23,6 +27,8 @@ class BaseClassifier(nn.Module):
 
         self.embedding = nn.Embedding(vocab_size, embedding_dim, padding_idx=pad_idx)
 
+        self.bidirectional = bidirectional
+
         self.rnn = nn.LSTM(
             embedding_dim,
             hidden_dim,
@@ -30,8 +36,10 @@ class BaseClassifier(nn.Module):
             bidirectional=bidirectional,
             dropout=dropout,
         )
-
-        self.fc = nn.Linear(hidden_dim * 2, output_dim)
+        if self.bidirectional:
+            self.fc = nn.Linear(hidden_dim * 2, output_dim)
+        else:
+            self.fc = nn.Linear(hidden_dim, output_dim)
 
         self.dropout = nn.Dropout(dropout)
 
@@ -45,6 +53,11 @@ class BaseClassifier(nn.Module):
 
         output, output_lengths = nn.utils.rnn.pad_packed_sequence(packed_output)
 
-        hidden = self.dropout(torch.cat((hidden[-2, :, :], hidden[-1, :, :]), dim=1))
+        if self.bidirectional:
+            hidden = self.dropout(
+                torch.cat((hidden[-2, :, :], hidden[-1, :, :]), dim=1)
+            )
+        else:
+            hidden = self.dropout(hidden[-1, :, :])
 
         return self.fc(hidden)

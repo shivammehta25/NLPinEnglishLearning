@@ -53,6 +53,13 @@ class GrammarDaset:
             (None, None),
         ]
 
+        if not os.path.exists(PROCESSED_DATASET["train"]) or not os.path.exists(
+            PROCESSED_DATASET["test"]
+        ):
+            raise FileNotFoundError(
+                "Please run the preprocessdata.py first by executing python preprocessdata.py"
+            )
+
         grammar_dataset.trainset, grammar_dataset.testset = data.TabularDataset.splits(
             path=os.path.join(DATASET_FOLDER, PROCESSED_DATASET_FOLDER),
             train="train.tsv",
