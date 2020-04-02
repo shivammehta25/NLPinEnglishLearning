@@ -11,7 +11,7 @@ from config.hyperparameters import (BIDIRECTION, DROPOUT, EMBEDDING_DIM,
                                     HIDDEN_DIM, N_LAYERS, LR, EPOCHS)
 from config.root import (LOGGING_FORMAT, LOGGING_LEVEL,
                          TRAINED_CLASSIFIER_FOLDER,
-                         TRAINED_CLASSIFIER_RNNHIDDEN, seed_all)
+                         TRAINED_CLASSIFIER_RNNHIDDEN, seed_all, device)
 from datasetloader import GrammarDaset
 from model import RNNHiddenClassifier
 from utility import categorical_accuracy
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "-m"
+        "-m",
         "--model-location",
         default=None,
         help="Give an already trained model location to use and train more epochs on it"
@@ -96,6 +96,9 @@ if __name__ == "__main__":
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=LR)
+
+    model = model.to(device)
+    criterion = criterion.to(device)
 
     for epoch in range(EPOCHS):
         train_loss, train_acc = train(model, dataset.train_iterator, optimizer, criterion)

@@ -1,3 +1,7 @@
+"""
+Helper Functions containing training and evaluation methods
+"""
+
 import torch
 from tqdm.auto import tqdm
 from utility import categorical_accuracy
@@ -20,12 +24,17 @@ def train(model, iterator, optimizer, criterion):
             batch.answer,
         )
 
-        print((question, question_len), (key, key_len), (answer, answer_len))
+        # print((question, question_len), (key, key_len), (answer, answer_len))
         print(
             (question.shape, question_len.shape),
             (key.shape, key_len.shape),
             (answer.shape, answer_len.shape),
         )
+
+        text = torch.cat((question, key, answer), dim=0)
+        text_lengths = question_len + key_len + answer_len
+
+        print(text.shape, text_lengths.shape)
 
         predictions = model(text, text_lengths).squeeze(1)
 

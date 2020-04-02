@@ -49,7 +49,7 @@ class GrammarDaset:
             ("question", grammar_dataset.question),
             ("key", grammar_dataset.key),
             ("answer", grammar_dataset.answer),
-            ("type_of_question", grammar_dataset.label),
+            ("label", grammar_dataset.label),
             (None, None),
         ]
 
