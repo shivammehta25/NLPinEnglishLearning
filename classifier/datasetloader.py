@@ -61,9 +61,6 @@ class GrammarDasetMultiTag:
             ("label", grammar_dataset.label),
             (None, None),
         ]
-        temp_train_df = pd.read_csv(
-            os.path.join(DATASET_FOLDER, PROCESSED_DATASET_FOLDER)
-        )
 
         if not os.path.exists(PROCESSED_DATASET["train"]) or not os.path.exists(
             PROCESSED_DATASET["test"]
@@ -134,7 +131,7 @@ class GrammarDasetSingleTag:
             + " </A> "
         )
 
-        dataset_pd.drop(["Question", "key", "answer", "Sub Section"], dim=1)
+        dataset_pd.drop(["Question", "key", "answer", "Sub Section"], axis=1)
         if not os.path.exists(TEMP_DIR):
             os.mkdir(TEMP_DIR)
 
@@ -210,7 +207,7 @@ class GrammarDasetSingleTag:
             (grammar_dataset.trainset, grammar_dataset.testset),
             batch_size=batch_size,
             sort_within_batch=True,
-            sort_key=lambda x: len(x.question) + len(x.key) + len(x.answer),
+            sort_key=lambda x: len(x.text),
             device=device,
         )
         logger.debug("Created Iterators")

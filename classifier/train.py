@@ -21,6 +21,7 @@ from config.hyperparameters import (
     HIDDEN_DIM,
     LR,
     N_LAYERS,
+    WEIGHT_DECAY,
 )
 from config.root import (
     LOGGING_FORMAT,
@@ -53,14 +54,22 @@ def initialize_new_model(
     BIDIRECTION,
     DROPOUT,
     FREEZE_EMBEDDINGS,
+    dataset_tag,
 ):
     """Method to initialise new model, takes in dataset object and hyperparameters as parameter"""
     logger.debug("Initializing Model")
+    if dataset_tag == "multi":
+        VOCAB_SIZE = len(dataset.question.vocab)
+        PAD_IDX = dataset.question.vocab.stoi[dataset.question.pad_token]
+        pretrained_embeddings = dataset.question.vocab.vectors
+        UNK_IDX = dataset.question.vocab.stoi[dataset.question.unk_token]
+    else:
+        VOCAB_SIZE = len(dataset.text.vocab)
+        PAD_IDX = dataset.text.vocab.stoi[dataset.text.pad_token]
+        pretrained_embeddings = dataset.text.vocab.vectors
+        UNK_IDX = dataset.text.vocab.stoi[dataset.text.unk_token]
 
-    VOCAB_SIZE = len(dataset.question.vocab)
     OUTPUT_LAYERS = len(dataset.label.vocab)
-    PAD_IDX = dataset.question.vocab.stoi[dataset.question.pad_token]
-
     model = RNNHiddenClassifier(
         VOCAB_SIZE,
         EMBEDDING_DIM,
@@ -80,11 +89,10 @@ def initialize_new_model(
     )
 
     # Initialize pretrained word embeddings
-    pretrained_embeddings = dataset.question.vocab.vectors
+
     model.embedding.weight.data.copy_(pretrained_embeddings)
 
     # Initialize Padding and Unknown as 0
-    UNK_IDX = dataset.question.vocab.stoi[dataset.question.unk_token]
     model.embedding.weight.data[UNK_IDX] = torch.zeros(EMBEDDING_DIM)
     model.embedding.weight.data[PAD_IDX] = torch.zeros(EMBEDDING_DIM)
 
@@ -180,6 +188,14 @@ if __name__ == "__main__":
         help="Use two different dataset type, multi type and single type where all are merged into same key ",
     )
 
+    parser.add_argument(
+        "-l2",
+        "--l2-regularization",
+        default=WEIGHT_DECAY,
+        help="Value of alpha in l2 regularization 0 means no regularization ",
+        type=float,
+    )
+
     args = parser.parse_args()
 
     seed_all(args.seed)
@@ -206,10 +222,13 @@ if __name__ == "__main__":
             args.bidirectional,
             args.dropout,
             args.freeze_embeddings,
+            args.tag,
         )
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=LR)
+    optimizer = optim.Adam(
+        model.parameters(), lr=LR, weight_decay=args.l2_regularization
+    )
 
     model = model.to(device)
     criterion = criterion.to(device)
