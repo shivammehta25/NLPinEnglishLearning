@@ -30,7 +30,7 @@ from config.root import (
     device,
     seed_all,
 )
-from datasetloader import GrammarDaset
+from datasetloader import GrammarDasetMultiTag, GrammarDasetSingleTag
 from helperfunctions import evaluate, train
 from model import RNNHiddenClassifier
 from utility import categorical_accuracy, epoch_time
@@ -172,6 +172,14 @@ if __name__ == "__main__":
         type=int,
     )
 
+    parser.add_argument(
+        "-t",
+        "--tag",
+        default="multi",
+        choices=["multi", "single"],
+        help="Use two different dataset type, multi type and single type where all are merged into same key ",
+    )
+
     args = parser.parse_args()
 
     seed_all(args.seed)
@@ -180,7 +188,10 @@ if __name__ == "__main__":
 
     logger.info("Loading Dataset")
 
-    dataset = GrammarDaset.get_iterators(args.batch_size)
+    if args.tag == "multi":
+        dataset = GrammarDasetMultiTag.get_iterators(args.batch_size)
+    else:
+        dataset = GrammarDasetSingleTag.get_iterators(args.batch_size)
 
     logger.info("Dataset Loaded Successfully")
 
@@ -212,9 +223,11 @@ if __name__ == "__main__":
     for epoch in range(int(args.epochs)):
         start_time = time.time()
         train_loss, train_acc = train(
-            model, dataset.train_iterator, optimizer, criterion
+            model, dataset.train_iterator, optimizer, criterion, args.tag
         )
-        test_loss, test_acc = evaluate(model, dataset.test_iterator, criterion)
+        test_loss, test_acc = evaluate(
+            model, dataset.test_iterator, criterion, args.tag
+        )
 
         end_time = time.time()
 

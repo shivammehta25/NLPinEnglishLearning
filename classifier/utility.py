@@ -21,11 +21,29 @@ def tokenizer(text):
     results = []
     text = text.replace("<blank>", " BLANKK ")
     text = text.replace("<slash>", " SLASHH ")
+    text = text.replace("<Q>", " QSTARTIT ")
+    text = text.replace("</Q>", " QENDIT ")
+    text = text.replace("<K>", " KSTARTIT ")
+    text = text.replace("</K>", " KENDIT ")
+    text = text.replace("<A>", " ASTARTIT ")
+    text = text.replace("</A>", " AENDIT ")
     for token in nlp(text):
         if token.text == "BLANKK":
             results.append("<blank>")
         elif token.text == "SLASHH":
             results.append("<slash>")
+        elif token.text == "QSTARTIT":
+            results.append("<Q>")
+        elif token.text == "QENDIT":
+            results.append("</Q>")
+        elif token.text == "KSTARTIT":
+            results.append("<K>")
+        elif token.text == "KENDIT":
+            results.append("</K>")
+        elif token.text == "ASTARTIT":
+            results.append("<A>")
+        elif token.text == "AENDIT":
+            results.append("</A>")
         else:
             results.append(token.text)
 
