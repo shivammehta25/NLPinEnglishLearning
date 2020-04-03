@@ -33,7 +33,7 @@ from config.root import (
 )
 from datasetloader import GrammarDasetMultiTag, GrammarDasetSingleTag
 from helperfunctions import evaluate, train
-from model import RNNHiddenClassifier
+from model import RNNHiddenClassifier, RNNMaxpoolClassifier
 from utility import categorical_accuracy, epoch_time
 
 # Initialize logger for this file
@@ -47,13 +47,14 @@ def count_parameters(model):
 
 
 def initialize_new_model(
+    classifier_type,
     dataset,
-    EMBEDDING_DIM,
-    HIDDEN_DIM,
-    N_LAYERS,
-    BIDIRECTION,
-    DROPOUT,
-    FREEZE_EMBEDDINGS,
+    embedding_dim,
+    hidden_dim,
+    n_layers,
+    bidirectional,
+    dropout,
+    freeze_embeddings,
     dataset_tag,
 ):
     """Method to initialise new model, takes in dataset object and hyperparameters as parameter"""
@@ -70,17 +71,35 @@ def initialize_new_model(
         UNK_IDX = dataset.text.vocab.stoi[dataset.text.unk_token]
 
     OUTPUT_LAYERS = len(dataset.label.vocab)
-    model = RNNHiddenClassifier(
-        VOCAB_SIZE,
-        EMBEDDING_DIM,
-        HIDDEN_DIM,
-        OUTPUT_LAYERS,
-        N_LAYERS,
-        BIDIRECTION,
-        DROPOUT,
-        PAD_IDX,
-        FREEZE_EMBEDDINGS,
-    )
+
+    if classifier_type == "RNNHiddenClassifier":
+
+        model = RNNHiddenClassifier(
+            VOCAB_SIZE,
+            embedding_dim,
+            hidden_dim,
+            OUTPUT_LAYERS,
+            n_layers,
+            bidirectional,
+            dropout,
+            PAD_IDX,
+            freeze_embeddings,
+        )
+
+    elif classifier_type == "RNNMaxpoolClassifier":
+        model = RNNMaxpoolClassifier(
+            VOCAB_SIZE,
+            embedding_dim,
+            hidden_dim,
+            OUTPUT_LAYERS,
+            n_layers,
+            bidirectional,
+            dropout,
+            PAD_IDX,
+            freeze_embeddings,
+        )
+    else:
+        raise TypeError("Invalid Classifier selected")
 
     logger.info(
         "Model Initialized with {:,} trainiable parameters".format(
@@ -93,8 +112,8 @@ def initialize_new_model(
     model.embedding.weight.data.copy_(pretrained_embeddings)
 
     # Initialize Padding and Unknown as 0
-    model.embedding.weight.data[UNK_IDX] = torch.zeros(EMBEDDING_DIM)
-    model.embedding.weight.data[PAD_IDX] = torch.zeros(EMBEDDING_DIM)
+    model.embedding.weight.data[UNK_IDX] = torch.zeros(embedding_dim)
+    model.embedding.weight.data[PAD_IDX] = torch.zeros(embedding_dim)
 
     logger.debug("Copied PreTrained Embeddings")
     return model
@@ -113,7 +132,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "-m",
+        "-loc",
         "--model-location",
         default=None,
         help="Give an already trained model location to use and train more epochs on it",
@@ -196,6 +215,14 @@ if __name__ == "__main__":
         type=float,
     )
 
+    parser.add_argument(
+        "-m",
+        "--model",
+        default="RNNHiddenClassifier",
+        choices=["RNNHiddenClassifier", "RNNMaxpoolClassifier"],
+        help="select the classifier to train on",
+    )
+
     args = parser.parse_args()
 
     seed_all(args.seed)
@@ -215,6 +242,7 @@ if __name__ == "__main__":
         model = torch.load(args.model_location)
     else:
         model = initialize_new_model(
+            classifier_type,
             dataset,
             args.embedding_dim,
             args.hidden_dim,
