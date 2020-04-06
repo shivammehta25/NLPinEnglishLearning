@@ -35,7 +35,12 @@ from config.root import (
 )
 from datasetloader import GrammarDasetMultiTag, GrammarDasetSingleTag
 from helperfunctions import evaluate, train
-from model import RNNHiddenClassifier, RNNMaxpoolClassifier, CNNClassifier
+from model import (
+    RNNHiddenClassifier,
+    RNNMaxpoolClassifier,
+    CNN2dClassifier,
+    CNN1dClassifier,
+)
 from utility import categorical_accuracy, epoch_time
 
 # Initialize logger for this file
@@ -98,8 +103,18 @@ def initialize_new_model(
             dropout,
             PAD_IDX,
         )
-    elif classifier_type == "CNNClassifier":
-        model = CNNClassifier(
+    elif classifier_type == "CNN2dClassifier":
+        model = CNN2dClassifier(
+            VOCAB_SIZE,
+            embedding_dim,
+            CNN_N_FILTER,
+            CNN_FILTER_SIZES,
+            OUTPUT_LAYERS,
+            dropout,
+            PAD_IDX,
+        )
+    elif classifier_type == "CNN1dClassifier":
+        model = CNN1dClassifier(
             VOCAB_SIZE,
             embedding_dim,
             CNN_N_FILTER,
@@ -110,15 +125,15 @@ def initialize_new_model(
         )
     else:
         raise TypeError("Invalid Classifier selected")
-    
-    if freeze_embeddings:
-            model.embedding.weight.requires_grad = False
 
-        logger.debug(
-            "Freeze Embeddings Value {}: {}".format(
-                freeze_embeddings, model.embedding.weight.requires_grad
-            )
+    if freeze_embeddings:
+        model.embedding.weight.requires_grad = False
+
+    logger.debug(
+        "Freeze Embeddings Value {}: {}".format(
+            freeze_embeddings, model.embedding.weight.requires_grad
         )
+    )
 
     logger.info(
         "Model Initialized with {:,} trainiable parameters".format(
@@ -238,7 +253,12 @@ if __name__ == "__main__":
         "-m",
         "--model",
         default="RNNHiddenClassifier",
-        choices=["RNNHiddenClassifier", "RNNMaxpoolClassifier", "CNNClassifier"],
+        choices=[
+            "RNNHiddenClassifier",
+            "RNNMaxpoolClassifier",
+            "CNN2dClassifier",
+            "CNN1dClassifier",
+        ],
         help="select the classifier to train on",
     )
 
