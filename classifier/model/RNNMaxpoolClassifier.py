@@ -29,22 +29,11 @@ class RNNMaxpoolClassifier(nn.Module):
         bidirectional,
         dropout,
         pad_idx,
-        freeze_embeddings,
     ):
 
         super().__init__()
 
         self.embedding = nn.Embedding(vocab_size, embedding_dim, padding_idx=pad_idx)
-
-        if freeze_embeddings:
-            self.embedding.weight.requires_grad = False
-
-        logger.debug(
-            "Freeze Embeddings Value {}: {}".format(
-                freeze_embeddings, self.embedding.weight.requires_grad
-            )
-        )
-
         self.bidirectional = bidirectional
 
         self.rnn = nn.LSTM(

@@ -85,7 +85,6 @@ def initialize_new_model(
             bidirectional,
             dropout,
             PAD_IDX,
-            freeze_embeddings,
         )
 
     elif classifier_type == "RNNMaxpoolClassifier":
@@ -98,7 +97,6 @@ def initialize_new_model(
             bidirectional,
             dropout,
             PAD_IDX,
-            freeze_embeddings,
         )
     elif classifier_type == "CNNClassifier":
         model = CNNClassifier(
@@ -112,6 +110,15 @@ def initialize_new_model(
         )
     else:
         raise TypeError("Invalid Classifier selected")
+    
+    if freeze_embeddings:
+            model.embedding.weight.requires_grad = False
+
+        logger.debug(
+            "Freeze Embeddings Value {}: {}".format(
+                freeze_embeddings, model.embedding.weight.requires_grad
+            )
+        )
 
     logger.info(
         "Model Initialized with {:,} trainiable parameters".format(
