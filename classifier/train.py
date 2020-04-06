@@ -22,6 +22,8 @@ from config.hyperparameters import (
     LR,
     N_LAYERS,
     WEIGHT_DECAY,
+    CNN_N_FILTER,
+    CNN_FILTER_SIZES,
 )
 from config.root import (
     LOGGING_FORMAT,
@@ -33,7 +35,7 @@ from config.root import (
 )
 from datasetloader import GrammarDasetMultiTag, GrammarDasetSingleTag
 from helperfunctions import evaluate, train
-from model import RNNHiddenClassifier, RNNMaxpoolClassifier
+from model import RNNHiddenClassifier, RNNMaxpoolClassifier, CNNClassifier
 from utility import categorical_accuracy, epoch_time
 
 # Initialize logger for this file
@@ -97,6 +99,16 @@ def initialize_new_model(
             dropout,
             PAD_IDX,
             freeze_embeddings,
+        )
+    elif classifier_type == "CNNClassifier":
+        model = CNNClassifier(
+            VOCAB_SIZE,
+            embedding_dim,
+            CNN_N_FILTER,
+            CNN_FILTER_SIZES,
+            OUTPUT_LAYERS,
+            dropout,
+            PAD_IDX,
         )
     else:
         raise TypeError("Invalid Classifier selected")
@@ -219,7 +231,7 @@ if __name__ == "__main__":
         "-m",
         "--model",
         default="RNNHiddenClassifier",
-        choices=["RNNHiddenClassifier", "RNNMaxpoolClassifier"],
+        choices=["RNNHiddenClassifier", "RNNMaxpoolClassifier", "CNNClassifier"],
         help="select the classifier to train on",
     )
 
@@ -242,7 +254,7 @@ if __name__ == "__main__":
         model = torch.load(args.model_location)
     else:
         model = initialize_new_model(
-            classifier_type,
+            args.model,
             dataset,
             args.embedding_dim,
             args.hidden_dim,
