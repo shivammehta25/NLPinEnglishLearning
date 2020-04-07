@@ -87,14 +87,6 @@ def get_batch_data_with_field_embeddings(batch, tag_field):
         batch.key,
         batch.answer,
     )
-    print(
-        question.shape,
-        question_len.shape,
-        key.shape,
-        key_len.shape,
-        answer.shape,
-        answer_len.shape,
-    )
     question_field, key_field, answer_field = (
         torch.full(question.shape, tag_field.vocab.stoi["Q"], dtype=torch.long).to(
             device
@@ -113,13 +105,10 @@ def get_batch_data_with_field_embeddings(batch, tag_field):
     return text, field, text_lengths
 
 
-def train_field_embeddings(model, iterator, optimizer, criterion, dataset_tag):
+def train_field_embeddings(model, iterator, optimizer, criterion, tag_field):
 
     epoch_loss = 0
     epoch_acc = 0
-
-    tag_field = data.Field(tokenize=tokenizer)
-    tag_field.build_vocab(["Q", "K", "A"])
 
     model.train()
 
@@ -143,5 +132,31 @@ def train_field_embeddings(model, iterator, optimizer, criterion, dataset_tag):
 
         epoch_loss += loss.item()
         epoch_acc += acc.item()
+
+    return epoch_loss / len(iterator), epoch_acc / len(iterator)
+
+
+def evaluate_field_embeddings(model, iterator, criterion, tag_field):
+    epoch_loss = 0
+    epoch_acc = 0
+
+    model.eval()
+
+    with torch.no_grad():
+
+        for batch in tqdm(iterator, total=len(iterator)):
+
+            text, field, text_lengths = get_batch_data_with_field_embeddings(
+                batch, tag_field
+            )
+
+            predictions = model(text, field, text_lengths).squeeze(1)
+
+            loss = criterion(predictions, batch.label)
+
+            acc = categorical_accuracy(predictions, batch.label)
+
+            epoch_loss += loss.item()
+            epoch_acc += acc.item()
 
     return epoch_loss / len(iterator), epoch_acc / len(iterator)

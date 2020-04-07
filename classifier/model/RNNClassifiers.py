@@ -133,13 +133,14 @@ class RNNFieldEmbeddingClassifier(nn.Module):
         bidirectional,
         dropout,
         pad_idx,
+        tag_field,
     ):
 
         super().__init__()
 
         self.embedding = nn.Embedding(vocab_size, embedding_dim, padding_idx=pad_idx)
 
-        self.field_embeddings = nn.Embedding(3, 50)
+        self.field_embeddings = nn.Embedding(len(tag_field.vocab), 50)
 
         self.bidirectional = bidirectional
 
@@ -165,11 +166,7 @@ class RNNFieldEmbeddingClassifier(nn.Module):
 
         embed = torch.cat((embedded, field_embed), -1)
 
-        print(embedded.shape, field_embed.shape, embed.shape)
-
         final_embeddings = torch.cat((embedded, field_embed), -1)
-
-        print(final_embeddings.shape)
 
         packed_embedded = nn.utils.rnn.pack_padded_sequence(embedded, text_lengths)
 

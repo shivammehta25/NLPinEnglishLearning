@@ -35,7 +35,12 @@ from config.root import (
     seed_all,
 )
 from datasetloader import GrammarDasetMultiTag, GrammarDasetSingleTag
-from helperfunctions import evaluate, train, train_field_embeddings
+from helperfunctions import (
+    evaluate,
+    train,
+    train_field_embeddings,
+    evaluate_field_embeddings,
+)
 from model import (
     CNN1dClassifier,
     CNN2dClassifier,
@@ -65,6 +70,7 @@ def initialize_new_model(
     dropout,
     freeze_embeddings,
     dataset_tag,
+    tag_field,
 ):
     """Method to initialise new model, takes in dataset object and hyperparameters as parameter"""
     logger.debug("Initializing Model")
@@ -126,7 +132,6 @@ def initialize_new_model(
             PAD_IDX,
         )
     elif classifier_type == "RNNFieldEmbeddingClassifier":
-
         model = RNNFieldEmbeddingClassifier(
             VOCAB_SIZE,
             embedding_dim,
@@ -136,6 +141,7 @@ def initialize_new_model(
             bidirectional,
             dropout,
             PAD_IDX,
+            tag_field,
         )
     else:
         raise TypeError("Invalid Classifier selected")
@@ -292,6 +298,9 @@ if __name__ == "__main__":
 
     logger.info("Dataset Loaded Successfully")
 
+    tag_field = data.Field(tokenize=tokenizer)
+    tag_field.build_vocab(["Q", "K", "A"])
+
     if args.model_location:
         model = torch.load(args.model_location)
     else:
@@ -305,6 +314,7 @@ if __name__ == "__main__":
             args.dropout,
             args.freeze_embeddings,
             args.tag,
+            tag_field,
         )
 
     criterion = nn.CrossEntropyLoss()
@@ -326,16 +336,20 @@ if __name__ == "__main__":
 
         if args.model == "RNNFieldEmbeddingClassifier":
             train_loss, train_acc = train_field_embeddings(
-                model, dataset.train_iterator, optimizer, criterion, args.tag
+                model, dataset.train_iterator, optimizer, criterion, tag_field
+            )
+
+            test_loss, test_acc = evaluate_field_embeddings(
+                model, dataset.test_iterator, criterion, tag_field
             )
         else:
             train_loss, train_acc = train(
                 model, dataset.train_iterator, optimizer, criterion, args.tag
             )
 
-        test_loss, test_acc = evaluate(
-            model, dataset.test_iterator, criterion, args.tag
-        )
+            test_loss, test_acc = evaluate(
+                model, dataset.test_iterator, criterion, args.tag
+            )
 
         end_time = time.time()
 
