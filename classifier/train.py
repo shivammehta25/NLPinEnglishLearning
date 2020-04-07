@@ -9,11 +9,14 @@ import time
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torchtext import data
 from tqdm.auto import tqdm
 
 from config.hyperparameters import (
     BATCH_SIZE,
     BIDIRECTION,
+    CNN_FILTER_SIZES,
+    CNN_N_FILTER,
     DROPOUT,
     EMBEDDING_DIM,
     EPOCHS,
@@ -22,8 +25,6 @@ from config.hyperparameters import (
     LR,
     N_LAYERS,
     WEIGHT_DECAY,
-    CNN_N_FILTER,
-    CNN_FILTER_SIZES,
 )
 from config.root import (
     LOGGING_FORMAT,
@@ -34,15 +35,15 @@ from config.root import (
     seed_all,
 )
 from datasetloader import GrammarDasetMultiTag, GrammarDasetSingleTag
-from helperfunctions import evaluate, train
+from helperfunctions import evaluate, train, train_field_embeddings
 from model import (
+    CNN1dClassifier,
+    CNN2dClassifier,
+    RNNFieldEmbeddingClassifier,
     RNNHiddenClassifier,
     RNNMaxpoolClassifier,
-    CNN2dClassifier,
-    CNN1dClassifier,
-    RNNFieldEmbeddingClassifier,
 )
-from utility import categorical_accuracy, epoch_time
+from utility import categorical_accuracy, epoch_time, tokenizer
 
 # Initialize logger for this file
 logger = logging.getLogger(__name__)
@@ -125,6 +126,7 @@ def initialize_new_model(
             PAD_IDX,
         )
     elif classifier_type == "RNNFieldEmbeddingClassifier":
+
         model = RNNFieldEmbeddingClassifier(
             VOCAB_SIZE,
             embedding_dim,
@@ -321,9 +323,16 @@ if __name__ == "__main__":
     best_test_loss = float("inf")
     for epoch in range(int(args.epochs)):
         start_time = time.time()
-        train_loss, train_acc = train(
-            model, dataset.train_iterator, optimizer, criterion, args.tag
-        )
+
+        if args.model == "RNNFieldEmbeddingClassifier":
+            train_loss, train_acc = train_field_embeddings(
+                model, dataset.train_iterator, optimizer, criterion, args.tag
+            )
+        else:
+            train_loss, train_acc = train(
+                model, dataset.train_iterator, optimizer, criterion, args.tag
+            )
+
         test_loss, test_acc = evaluate(
             model, dataset.test_iterator, criterion, args.tag
         )

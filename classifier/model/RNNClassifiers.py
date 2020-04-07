@@ -1,5 +1,5 @@
 """
-Model Architecture
+Model Architecture for RNN based Models
 """
 
 import logging
