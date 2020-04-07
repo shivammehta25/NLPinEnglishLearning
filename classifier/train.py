@@ -32,6 +32,7 @@ from config.root import (
     TRAINED_CLASSIFIER_RNNHIDDEN,
     device,
     seed_all,
+    SEED,
 )
 from datasetloader import GrammarDasetMultiTag, GrammarDasetSingleTag
 from helperfunctions import evaluate, train
@@ -160,7 +161,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-s",
         "--seed",
-        default=1234,
+        default=SEED,
         help="Set custom seed for reproducibility",
         type=int,
     )

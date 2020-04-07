@@ -15,8 +15,10 @@ LOGGING_FORMAT = (
     "[%(levelname)s | %(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
 )
 
+SEED = 1234
 
-def seed_all(seed=1234):
+
+def seed_all(seed):
     """Seed the results for duplication"""
     random.seed(seed)
     os.environ["PYTHONHASHSEED"] = str(seed)

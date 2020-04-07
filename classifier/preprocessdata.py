@@ -22,7 +22,7 @@ from config.data import (
     PROCESSED_DATASET_FOLDER,
     RAW_DATASET,
 )
-from config.root import LOGGING_FORMAT, LOGGING_LEVEL
+from config.root import LOGGING_FORMAT, LOGGING_LEVEL, SEED
 
 # Initialize logger for this file
 logger = logging.getLogger(__name__)
@@ -73,7 +73,9 @@ class PreProcessDataset:
         #     + " </A_S> "
         # )
 
-        self.trainset, self.testset = train_test_split(self.dataset, test_size=0.15)
+        self.trainset, self.testset = train_test_split(
+            self.dataset, test_size=0.15, random_state=SEED
+        )
 
         self.trainset.to_csv(PROCESSED_DATASET["train"], index=False, sep="\t")
         self.testset.to_csv(PROCESSED_DATASET["test"], index=False, sep="\t")
