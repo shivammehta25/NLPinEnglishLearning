@@ -128,9 +128,10 @@ def initialize_new_model(
         model = RNNFieldEmbeddingClassifier(
             VOCAB_SIZE,
             embedding_dim,
-            CNN_N_FILTER,
-            CNN_FILTER_SIZES,
+            hidden_dim,
             OUTPUT_LAYERS,
+            n_layers,
+            bidirectional,
             dropout,
             PAD_IDX,
         )
