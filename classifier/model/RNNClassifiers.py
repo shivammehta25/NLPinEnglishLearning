@@ -157,13 +157,15 @@ class RNNFieldEmbeddingClassifier(nn.Module):
 
         self.dropout = nn.Dropout(dropout)
 
-    def forward(self, text, text_lengths):
+    def forward(self, text, field, text_lengths):
 
         embedded = self.dropout(self.embedding(text))
 
-        field_embed = self.field_embeddings(torch.Tensor(["Q", "K", "A"]))
+        field_embed = self.field_embeddings(field)
 
-        print(embedded.shape, field_embed.shape)
+        embed = torch.cat((embedded, field_embed), -1)
+
+        print(embedded.shape, field_embed.shape, embed.shape)
 
         final_embeddings = torch.cat((embedded, field_embed), -1)
 
