@@ -40,6 +40,7 @@ from model import (
     RNNMaxpoolClassifier,
     CNN2dClassifier,
     CNN1dClassifier,
+    RNNFieldEmbeddingClassifier,
 )
 from utility import categorical_accuracy, epoch_time
 
@@ -115,6 +116,16 @@ def initialize_new_model(
         )
     elif classifier_type == "CNN1dClassifier":
         model = CNN1dClassifier(
+            VOCAB_SIZE,
+            embedding_dim,
+            CNN_N_FILTER,
+            CNN_FILTER_SIZES,
+            OUTPUT_LAYERS,
+            dropout,
+            PAD_IDX,
+        )
+    elif classifier_type == "RNNFieldEmbeddingClassifier":
+        model = RNNFieldEmbeddingClassifier(
             VOCAB_SIZE,
             embedding_dim,
             CNN_N_FILTER,
@@ -258,6 +269,7 @@ if __name__ == "__main__":
             "RNNMaxpoolClassifier",
             "CNN2dClassifier",
             "CNN1dClassifier",
+            "RNNFieldEmbeddingClassifier",
         ],
         help="select the classifier to train on",
     )
