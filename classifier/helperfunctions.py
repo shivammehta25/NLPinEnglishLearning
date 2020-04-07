@@ -84,8 +84,15 @@ def get_batch_data_with_field_embeddings(batch):
         batch.key,
         batch.answer,
     )
-
-    logger.debug("Batch shape: {}".format(batch.shape))
+    print(
+        question.shape,
+        question_len.shape,
+        key.shape,
+        key_len.shape,
+        answer.shape,
+        answer_len.shape,
+    )
+    print("Batch shape: {}".format(batch.shape))
 
     text = torch.cat((question, key, answer), dim=0)
     text_lengths = question_len + key_len + answer_len
@@ -96,11 +103,10 @@ def train_field_embeddings(model, iterator, optimizer, criterion, dataset_tag):
     epoch_loss = 0
     epoch_acc = 0
 
-    field_label = data.Field(tokenize=tokenizer)
-    field_label.build_vocab(["Q", "K", "A"])
+    # field_label = data.Field(tokenize=tokenizer)
+    # field_label.build_vocab(["Q", "K", "A"])
 
     model.train()
-
 
     for batch in tqdm(iterator, total=len(iterator)):
 
