@@ -42,6 +42,7 @@ from model import (
     CNN2dClassifier,
     CNN1dClassifier,
     RNNFieldClassifer,
+    CNN1dExtraLayerClassifier,
 )
 from utility import categorical_accuracy, epoch_time
 
@@ -136,6 +137,16 @@ def initialize_new_model(
             dropout,
             PAD_IDX,
             dataset.tags,
+        )
+    elif classifier_type == "CNN1dExtraLayerClassifier":
+        model = CNN1dExtraLayerClassifier(
+            VOCAB_SIZE,
+            embedding_dim,
+            CNN_N_FILTER,
+            CNN_FILTER_SIZES,
+            OUTPUT_LAYERS,
+            dropout,
+            PAD_IDX,
         )
     else:
         raise TypeError("Invalid Classifier selected")
@@ -274,6 +285,7 @@ if __name__ == "__main__":
             "CNN2dClassifier",
             "CNN1dClassifier",
             "RNNFieldClassifer",
+            "CNN1dExtraLayerClassifier",
         ],
         help="select the classifier to train on",
     )
