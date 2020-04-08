@@ -42,6 +42,8 @@ class GrammarDasetMultiTag:
         )
         self.label = data.LabelField()
 
+        self.tags = data.Field(tokenize=tokenizer)
+
         self.fields = None
         self.trainset = None
         self.testset = None
@@ -91,6 +93,8 @@ class GrammarDasetMultiTag:
         grammar_dataset.answer.vocab = grammar_dataset.question.vocab
 
         grammar_dataset.label.build_vocab(grammar_dataset.trainset)
+
+        grammar_dataset.tags.build_vocab(["Q", "K", "A"])
 
         logger.debug("Vocabulary Loaded")
         grammar_dataset.train_iterator, grammar_dataset.test_iterator = data.BucketIterator.splits(
