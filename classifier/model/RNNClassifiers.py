@@ -143,6 +143,8 @@ class RNNFieldClassifer(nn.Module):
             padding_idx=tag_vocab.vocab.stoi[tag_vocab.pad_token],
         )
 
+        self.tag_embedding.weight.requires_grad = False
+
         self.bidirectional = bidirectional
 
         self.rnn = nn.LSTM(

@@ -117,13 +117,13 @@ def get_batch_data_and_tag(batch, tag_field):
     )
 
     question_tag = torch.full_like(
-        question, tag_field.vocab.stoi["Q"], dtype=torch.float, device=device
+        question, tag_field.vocab.stoi["Q"], dtype=torch.long, device=device
     )
     key_tag = torch.full_like(
-        key, tag_field.vocab.stoi["K"], dtype=torch.float, device=device
+        key, tag_field.vocab.stoi["K"], dtype=torch.long, device=device
     )
     answer_tag = torch.full_like(
-        answer, tag_field.vocab.stoi["A"], dtype=torch.float, device=device
+        answer, tag_field.vocab.stoi["A"], dtype=torch.long, device=device
     )
 
     tag = torch.cat((question_tag, key_tag, answer_tag), dim=0)
