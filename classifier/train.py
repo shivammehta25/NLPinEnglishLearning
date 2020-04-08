@@ -35,12 +35,13 @@ from config.root import (
     SEED,
 )
 from datasetloader import GrammarDasetMultiTag, GrammarDasetSingleTag
-from helperfunctions import evaluate, train
+from helperfunctions import evaluate, train, train_tag_model, evaluate_tag_model
 from model import (
     RNNHiddenClassifier,
     RNNMaxpoolClassifier,
     CNN2dClassifier,
     CNN1dClassifier,
+    RNNFieldClassifer,
 )
 from utility import categorical_accuracy, epoch_time
 
@@ -123,6 +124,18 @@ def initialize_new_model(
             OUTPUT_LAYERS,
             dropout,
             PAD_IDX,
+        )
+    elif classifier_type == "RNNFieldClassifer":
+        model = RNNFieldClassifer(
+            VOCAB_SIZE,
+            embedding_dim,
+            hidden_dim,
+            OUTPUT_LAYERS,
+            n_layers,
+            bidirectional,
+            dropout,
+            PAD_IDX,
+            dataset.tags,
         )
     else:
         raise TypeError("Invalid Classifier selected")
@@ -257,8 +270,10 @@ if __name__ == "__main__":
         choices=[
             "RNNHiddenClassifier",
             "RNNMaxpoolClassifier",
+            "RNNFieldClassifier",
             "CNN2dClassifier",
             "CNN1dClassifier",
+            "RNNFieldClassifer",
         ],
         help="select the classifier to train on",
     )
@@ -307,14 +322,25 @@ if __name__ == "__main__":
         os.mkdir(TRAINED_CLASSIFIER_FOLDER)
 
     best_test_loss = float("inf")
+
     for epoch in range(int(args.epochs)):
+
         start_time = time.time()
-        train_loss, train_acc = train(
-            model, dataset.train_iterator, optimizer, criterion, args.tag
-        )
-        test_loss, test_acc = evaluate(
-            model, dataset.test_iterator, criterion, args.tag
-        )
+        if args.model == "RNNFieldClassifer":
+            train_loss, train_acc = train_tag_model(
+                model, dataset.train_iterator, optimizer, criterion, dataset.tags
+            )
+            test_loss, test_acc = evaluate_tag_model(
+                model, dataset.test_iterator, criterion, dataset.tags
+            )
+
+        else:
+            train_loss, train_acc = train(
+                model, dataset.train_iterator, optimizer, criterion, args.tag
+            )
+            test_loss, test_acc = evaluate(
+                model, dataset.test_iterator, criterion, args.tag
+            )
 
         end_time = time.time()
 
