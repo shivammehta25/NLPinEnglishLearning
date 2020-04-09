@@ -24,6 +24,7 @@ from config.hyperparameters import (
     WEIGHT_DECAY,
     CNN_N_FILTER,
     CNN_FILTER_SIZES,
+    LINEAR_HIDDEN_DIM,
 )
 from config.root import (
     LOGGING_FORMAT,
@@ -66,6 +67,7 @@ def initialize_new_model(
     dropout,
     freeze_embeddings,
     dataset_tag,
+    linear_hidden_dim,
 ):
     """Method to initialise new model, takes in dataset object and hyperparameters as parameter"""
     logger.debug("Initializing Model")
@@ -147,6 +149,7 @@ def initialize_new_model(
             OUTPUT_LAYERS,
             dropout,
             PAD_IDX,
+            linear_hidden_dim,
         )
     else:
         raise TypeError("Invalid Classifier selected")
@@ -290,6 +293,14 @@ if __name__ == "__main__":
         help="select the classifier to train on",
     )
 
+    parser.add_argument(
+        "-lhd",
+        "--linear-hidden-dim",
+        default=LINEAR_HIDDEN_DIM,
+        help="Freeze Embeddings of Model",
+        type=int,
+    )
+
     args = parser.parse_args()
 
     seed_all(args.seed)
@@ -318,6 +329,7 @@ if __name__ == "__main__":
             args.dropout,
             args.freeze_embeddings,
             args.tag,
+            args.linear_hidden_dim,
         )
 
     criterion = nn.CrossEntropyLoss()

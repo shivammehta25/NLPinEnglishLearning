@@ -97,6 +97,27 @@ class CNN1dClassifier(nn.Module):
         return self.fc(cat)
 
 
+class CustomConv1d(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, padding=0):
+
+        super().__init__()
+
+        self.convlayer = nn.Conv1d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            padding=padding,
+        )
+
+    def forward(self, embedded):
+
+        embedded = embedded.permute(0, 2, 1)
+
+        post_conv = self.convlayer(embedded)
+
+        return post_conv.permute(0, 2, 1)
+
+
 class CNN1dExtraLayerClassifier(nn.Module):
     def __init__(
         self,
@@ -104,6 +125,7 @@ class CNN1dExtraLayerClassifier(nn.Module):
         embedding_dim,
         n_filters,
         filter_sizes,
+        linear_hidden_dim,
         output_dim,
         dropout,
         pad_idx,
@@ -115,34 +137,47 @@ class CNN1dExtraLayerClassifier(nn.Module):
 
         self.convs = nn.ModuleList(
             [
-                nn.Conv1d(
-                    in_channels=embedding_dim, out_channels=n_filters, kernel_size=fs
+                CustomConv1d(
+                    in_channels=embedding_dim,
+                    out_channels=n_filters,
+                    kernel_size=fs,
+                    padding=((fs - 1) // 2),
                 )
                 for fs in filter_sizes
             ]
         )
 
-        self.fc = nn.Linear(len(filter_sizes) * n_filters, output_dim)
+        self.hidden_layer = nn.Linear(len(filter_sizes) * n_filters, linear_hidden_dim)
+
+        self.fc = nn.Linear(linear_hidden_dim, output_dim)
 
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, text, text_len):
 
         text = text.permute(1, 0)
-
+        max_len = text.shape[1]
+        print(max_len)
         embedded = self.embedding(text)
 
-        embedded = embedded.permute(0, 2, 1)
+        print("Embedding Size: {}".format(embedded.shape))
 
-        conved = [F.relu(conv(embedded)) for conv in self.convs]
+        conved = [conv(embedded) for conv in self.convs]
 
-        for conv in conved:
-            print(conv.shape)
+        cnns = F.relu(torch.cat([conv for conv in conved], -1))
+        print("Concat CNN shape: {}".format(cnns.shape))
 
-        pooled = [F.max_pool1d(conv, conv.shape[2]).squeeze(2) for conv in conved]
+        exit(0)
+        mask = (torch.arange(max_len) < text_len).float().cuda()
 
-        for pool in pooled:
-            print(pool.shape)
+        vec, _ = torch.max(cnns * mask)
+
+        print([conv.shape for conv in conved])
+
+        # pooled = [F.max_pool1d(conv, conv.shape[2]).squeeze(2) for conv in conved]
+
+        # for pool in pooled:
+        #     print(pool.shape)
 
         cat = self.dropout(torch.cat(pooled, dim=1))
 
