@@ -146,10 +146,10 @@ def initialize_new_model(
             embedding_dim,
             CNN_N_FILTER,
             CNN_FILTER_SIZES,
+            linear_hidden_dim,
             OUTPUT_LAYERS,
             dropout,
             PAD_IDX,
-            linear_hidden_dim,
         )
     else:
         raise TypeError("Invalid Classifier selected")

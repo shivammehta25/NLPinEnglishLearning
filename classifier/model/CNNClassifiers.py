@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from config.root import device
 
 
 class CNN2dClassifier(nn.Module):
@@ -164,21 +165,37 @@ class CNN1dExtraLayerClassifier(nn.Module):
 
         conved = [conv(embedded) for conv in self.convs]
 
+        print([conv.shape for conv in conved])
+
         cnns = F.relu(torch.cat([conv for conv in conved], -1))
         print("Concat CNN shape: {}".format(cnns.shape))
 
+        hidden_output = self.hidden_layer(cnns)
+
+        print(hidden_output.shape)
+        mask = (
+            torch.arange(max_len, device=device).expand(len(text_len), max_len)
+            < text_len.unsqueeze(1)
+        ).float()
+
+        print(mask.shape)
+        print(mask)
+
+        # mask = (torch.arange(max_len) < text_len).float().cuda()
+
+        vec, _ = torch.max(hidden_output - (1.0 - mask) * 1e23, dim=1)
+
+        print("Vector shapes : {}".format(vec.shape))
+
         exit(0)
-        mask = (torch.arange(max_len) < text_len).float().cuda()
 
-        vec, _ = torch.max(cnns * mask)
-
-        print([conv.shape for conv in conved])
+        # print([conv.shape for conv in conved])
 
         # pooled = [F.max_pool1d(conv, conv.shape[2]).squeeze(2) for conv in conved]
 
         # for pool in pooled:
         #     print(pool.shape)
 
-        cat = self.dropout(torch.cat(pooled, dim=1))
+        cat = self.dropout(vec)
 
         return self.fc(cat)
