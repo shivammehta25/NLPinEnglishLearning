@@ -35,7 +35,7 @@ from config.root import (
     seed_all,
     SEED,
 )
-from datasetloader import GrammarDasetMultiTag, GrammarDasetSingleTag
+from datasetloader import GrammarDasetMultiTag, GrammarDasetAnswerTag
 from helperfunctions import evaluate, train, train_tag_model, evaluate_tag_model
 from model import (
     RNNHiddenClassifier,
@@ -265,7 +265,7 @@ if __name__ == "__main__":
         "-t",
         "--tag",
         default="multi",
-        choices=["multi", "single"],
+        choices=["multi", "answeronly"],
         help="Use two different dataset type, multi type and single type where all are merged into same key ",
     )
 
@@ -312,7 +312,7 @@ if __name__ == "__main__":
     if args.tag == "multi":
         dataset = GrammarDasetMultiTag.get_iterators(args.batch_size)
     else:
-        dataset = GrammarDasetSingleTag.get_iterators(args.batch_size)
+        dataset = GrammarDasetAnswerTag.get_iterators(args.batch_size)
 
     logger.info("Dataset Loaded Successfully")
 

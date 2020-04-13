@@ -109,37 +109,23 @@ class GrammarDasetMultiTag:
         return grammar_dataset
 
 
-class GrammarDasetSingleTag:
+class GrammarDasetAnswerTag:
     def __init__(self):
 
         self.dataset_location = PROCESSED_DATASET
 
-        self.text = data.Field(tokenize=tokenizer, include_lengths=True)
+        self.text = data.Field(
+            tokenize=tokenizer,
+            include_lengths=True,
+            eos_token="<end>",
+            init_token="<start>",
+        )
         self.label = data.LabelField()
 
         self.fields = None
         self.trainset = None
         self.testset = None
         self.train_iterator, self.test_iterator = None, None
-
-    def append_datarows_temp_file(self, dataset_pd, filename):
-        """ Append the contents and converts into a temp file """
-
-        dataset_pd["text"] = (
-            " <Q> "
-            + dataset_pd["Question"]
-            + " </Q> <K> "
-            + dataset_pd["key"]
-            + " </K> <A> "
-            + dataset_pd["answer"]
-            + " </A> "
-        )
-
-        dataset_pd.drop(["Question", "key", "answer", "Sub Section"], axis=1)
-        if not os.path.exists(TEMP_DIR):
-            os.mkdir(TEMP_DIR)
-
-        dataset_pd.to_csv(os.path.join(TEMP_DIR, filename), index=False, sep="\t")
 
     @classmethod
     def get_iterators(cls, batch_size):
@@ -149,35 +135,12 @@ class GrammarDasetSingleTag:
         grammar_dataset = cls()
 
         grammar_dataset.fields = [
-            ("text", grammar_dataset.text),
+            (None, None),
+            (None, None),
+            ("answer", grammar_dataset.text),
             ("label", grammar_dataset.label),
+            (None, None),
         ]
-
-        temp_train_df = pd.read_csv(
-            os.path.join(
-                DATASET_FOLDER,
-                PROCESSED_DATASET_FOLDER,
-                PROCESSED_DATASET_TRAIN_FILENAME,
-            ),
-            sep="\t",
-        )
-
-        grammar_dataset.append_datarows_temp_file(
-            temp_train_df, PROCESSED_DATASET_TRAIN_FILENAME
-        )
-
-        temp_test_df = pd.read_csv(
-            os.path.join(
-                DATASET_FOLDER,
-                PROCESSED_DATASET_FOLDER,
-                PROCESSED_DATASET_TEST_FILENAME,
-            ),
-            sep="\t",
-        )
-
-        grammar_dataset.append_datarows_temp_file(
-            temp_test_df, PROCESSED_DATASET_TEST_FILENAME
-        )
 
         if not os.path.exists(PROCESSED_DATASET["train"]) or not os.path.exists(
             PROCESSED_DATASET["test"]
@@ -187,7 +150,7 @@ class GrammarDasetSingleTag:
             )
 
         grammar_dataset.trainset, grammar_dataset.testset = data.TabularDataset.splits(
-            path=TEMP_DIR,
+            path=os.path.join(DATASET_FOLDER, PROCESSED_DATASET_FOLDER),
             train=PROCESSED_DATASET_TRAIN_FILENAME,
             test=PROCESSED_DATASET_TEST_FILENAME,
             format="tsv",
