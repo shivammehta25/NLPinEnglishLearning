@@ -158,44 +158,48 @@ class CNN1dExtraLayerClassifier(nn.Module):
 
         text = text.permute(1, 0)
         max_len = text.shape[1]
-        print(max_len)
+        # print(max_len)
         embedded = self.embedding(text)
 
-        print("Embedding Size: {}".format(embedded.shape))
+        # print("Embedding Size: {}".format(embedded.shape))
 
         conved = [conv(embedded) for conv in self.convs]
 
-        print([conv.shape for conv in conved])
+        # print([conv.shape for conv in conved])
 
         cnns = F.relu(torch.cat([conv for conv in conved], -1))
-        print("Concat CNN shape: {}".format(cnns.shape))
+        # print("Concat CNN shape: {}".format(cnns.shape))
 
         hidden_output = self.hidden_layer(cnns)
 
-        print(hidden_output.shape)
+        # print(hidden_output.shape)
         mask = (
-            torch.arange(max_len, device=device).expand(len(text_len), max_len)
-            < text_len.unsqueeze(1)
-        ).float()
+            (
+                torch.arange(max_len, device=device).expand(len(text_len), max_len)
+                < text_len.unsqueeze(1)
+            )
+            .float()
+            .unsqueeze(2)
+        )
 
-        print(mask.shape)
-        print(mask)
+        # print(mask.shape)
 
-        # mask = (torch.arange(max_len) < text_len).float().cuda()
+        vectors = hidden_output - (1.0 - mask) * 1e23
 
-        vec, _ = torch.max(hidden_output - (1.0 - mask) * 1e23, dim=1)
+        # print("Vector shapes : {}".format(vectors.shape))
 
-        print("Vector shapes : {}".format(vec.shape))
+        # print(vectors[0, :, 0])
 
-        exit(0)
+        vec, _ = torch.max(vectors, dim=1)
 
-        # print([conv.shape for conv in conved])
-
-        # pooled = [F.max_pool1d(conv, conv.shape[2]).squeeze(2) for conv in conved]
-
-        # for pool in pooled:
-        #     print(pool.shape)
+        # print(vec.shape)
 
         cat = self.dropout(vec)
 
-        return self.fc(cat)
+        # print(cat.shape)
+
+        output = self.fc(cat)
+
+        # print(output.shape)
+
+        return output
