@@ -24,6 +24,7 @@ from config.hyperparameters import (
     WEIGHT_DECAY,
     CNN_N_FILTER,
     CNN_FILTER_SIZES,
+    LINEAR_HIDDEN_DIM,
 )
 from config.root import (
     LOGGING_FORMAT,
@@ -42,6 +43,7 @@ from model import (
     CNN2dClassifier,
     CNN1dClassifier,
     RNNFieldClassifer,
+    CNN1dExtraLayerClassifier,
 )
 from utility import categorical_accuracy, epoch_time
 
@@ -65,6 +67,7 @@ def initialize_new_model(
     dropout,
     freeze_embeddings,
     dataset_tag,
+    linear_hidden_dim,
 ):
     """Method to initialise new model, takes in dataset object and hyperparameters as parameter"""
     logger.debug("Initializing Model")
@@ -136,6 +139,17 @@ def initialize_new_model(
             dropout,
             PAD_IDX,
             dataset.tags,
+        )
+    elif classifier_type == "CNN1dExtraLayerClassifier":
+        model = CNN1dExtraLayerClassifier(
+            VOCAB_SIZE,
+            embedding_dim,
+            CNN_N_FILTER,
+            CNN_FILTER_SIZES,
+            linear_hidden_dim,
+            OUTPUT_LAYERS,
+            dropout,
+            PAD_IDX,
         )
     else:
         raise TypeError("Invalid Classifier selected")
@@ -274,8 +288,17 @@ if __name__ == "__main__":
             "CNN2dClassifier",
             "CNN1dClassifier",
             "RNNFieldClassifer",
+            "CNN1dExtraLayerClassifier",
         ],
         help="select the classifier to train on",
+    )
+
+    parser.add_argument(
+        "-lhd",
+        "--linear-hidden-dim",
+        default=LINEAR_HIDDEN_DIM,
+        help="Freeze Embeddings of Model",
+        type=int,
     )
 
     args = parser.parse_args()
@@ -306,6 +329,7 @@ if __name__ == "__main__":
             args.dropout,
             args.freeze_embeddings,
             args.tag,
+            args.linear_hidden_dim,
         )
 
     criterion = nn.CrossEntropyLoss()
