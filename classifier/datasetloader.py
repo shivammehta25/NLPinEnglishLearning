@@ -137,7 +137,7 @@ class GrammarDasetAnswerTag:
         grammar_dataset.fields = [
             (None, None),
             (None, None),
-            ("answer", grammar_dataset.text),
+            ("text", grammar_dataset.text),
             ("label", grammar_dataset.label),
             (None, None),
         ]
