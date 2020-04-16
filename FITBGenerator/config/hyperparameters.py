@@ -1,0 +1,19 @@
+"""
+Hyper Parameters of Model
+"""
+
+MAX_VOCAB = 10000
+BATCH_SIZE = 64
+# Keep it 300 since we are using glove 300d vectors
+EMBEDDING_DIM = 300
+HIDDEN_DIM = 128
+N_LAYERS = 1
+BIDIRECTION = True
+DROPOUT = 0.7
+LR = 0.001
+EPOCHS = 5
+FREEZE_EMBEDDINGS = 1
+WEIGHT_DECAY = 0.001
+CNN_FILTER_SIZES = [1, 3, 5]
+CNN_N_FILTER = 64
+LINEAR_HIDDEN_DIM = 128
