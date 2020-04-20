@@ -63,10 +63,10 @@ def initialize_new_model(
 ):
     """Method to initialise new model, takes in dataset object and hyperparameters as parameter"""
     logger.debug("Initializing Model")
-    VOCAB_SIZE = len(dataset.question.vocab)
-    PAD_IDX = dataset.question.vocab.stoi[dataset.question.pad_token]
-    pretrained_embeddings = dataset.question.vocab.vectors
-    UNK_IDX = dataset.question.vocab.stoi[dataset.question.unk_token]
+    VOCAB_SIZE = len(dataset.answer.vocab)
+    PAD_IDX = dataset.answer.vocab.stoi[dataset.answer.pad_token]
+    pretrained_embeddings = dataset.answer.vocab.vectors
+    UNK_IDX = dataset.answer.vocab.stoi[dataset.answer.unk_token]
     OUTPUT_LAYERS = 1
     if classifier_type == "RNNHiddenClassifier":
 
@@ -259,21 +259,10 @@ if __name__ == "__main__":
     for epoch in range(int(args.epochs)):
 
         start_time = time.time()
-        if args.model == "RNNFieldClassifer":
-            train_loss, train_acc = train_tag_model(
-                model, dataset.train_iterator, optimizer, criterion, dataset.tags
-            )
-            test_loss, test_acc = evaluate_tag_model(
-                model, dataset.test_iterator, criterion, dataset.tags
-            )
-
-        else:
-            train_loss, train_acc = train(
-                model, dataset.train_iterator, optimizer, criterion, args.tag
-            )
-            test_loss, test_acc = evaluate(
-                model, dataset.test_iterator, criterion, args.tag
-            )
+        train_loss, train_acc = train(
+            model, dataset.train_iterator, optimizer, criterion
+        )
+        test_loss, test_acc = evaluate(model, dataset.test_iterator, criterion)
 
         end_time = time.time()
 
