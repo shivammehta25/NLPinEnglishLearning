@@ -6,25 +6,30 @@ Preprocessing of raw data run this file by
     >>> python preproecssdata.py --location <datasetLocation>
 ```
 """
-
 import argparse
+import csv
 import logging
 import os
+import re
 import time
-import csv
 
 import numpy as np
 import pandas as pd
+import spacy
 import torch
 from sklearn.model_selection import train_test_split
+from tqdm.auto import tqdm
+
 from config.data import (
     DATASET_FOLDER,
     PROCESSED_DATASET,
     PROCESSED_DATASET_FOLDER,
     RAW_DATASET,
 )
-from config.root import LOGGING_FORMAT, LOGGING_LEVEL, SEED
-from tqdm.auto import tqdm
+from config.root import LOGGING_FORMAT, LOGGING_LEVEL, SEED, seed_all
+
+nlp = spacy.load("en")
+seed_all(SEED)
 
 # Initialize logger for this file
 logger = logging.getLogger(__name__)
@@ -45,10 +50,11 @@ class PreProcessDataset:
 
         self.dataset = {"feature": [], "key": []}
 
-    def write_to_dataset(row):
-        row["Question"] = [t.text for t in nlp(row["Question"].replace(".","").strip())]
-        answer = [t.text for t in nlp(row["answer"].replace(".","").strip())]
-        i = 0
+    def write_to_dataset(self, row):
+        row["Question"] = [
+            t.text for t in nlp(row["Question"].replace(".", "").strip())
+        ]
+        answer = [t.text for t in nlp(row["answer"].replace(".", "").strip())]
         label = []
 
         while row["Question"] and answer:
@@ -57,8 +63,9 @@ class PreProcessDataset:
                 answer.pop()
             elif row["Question"][-1] == "_":
                 row["Question"].pop()
-                while row["Question"] and answer and (row["Question"][-1] != answer[-1]):
-                    print(row["Question"], answer)
+                while (
+                    row["Question"] and answer and (row["Question"][-1] != answer[-1])
+                ):
                     label.append(answer.pop())
                 break
 
@@ -66,22 +73,23 @@ class PreProcessDataset:
             while answer:
                 label.append(answer.pop())
 
-        dataset["feature"].append(row["answer"].lstrip().strip())
-        dataset["key"].append(" ".join(reversed(label)))
+        self.dataset["feature"].append(row["answer"].lstrip().strip())
+        self.dataset["key"].append(" ".join(reversed(label)))
 
     def preprocess(self):
         """Preprocesses the dataset"""
 
-        with open(self.dataset_location) as csv_file:
-            csv_reader = csv.DictReader(csv_file, delimiter='\t')
-            for row in tqdm(csv_reader, total=len(csv_reader):
+        with open("data/raw/GrammarDataset.csv") as csv_file:
+            csv_reader = csv.DictReader(csv_file, delimiter="\t")
+            for row in csv_reader:
                 if "_" in row["Question"]:
                     row["Question"] = re.sub(r"[_]{2,}", "_", row["Question"])
 
-                self.write_to_dataset(row)
+                    self.write_to_dataset(row)
 
         logger.debug("DataSet Preprocessed Successfully!")
 
+        self.dataset = pd.DataFrame.from_dict(self.dataset)
 
         self.trainset, self.testset = train_test_split(
             self.dataset, test_size=0.15, random_state=SEED
