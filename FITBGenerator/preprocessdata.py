@@ -11,6 +11,7 @@ import argparse
 import logging
 import os
 import time
+import csv
 
 import numpy as np
 import pandas as pd
@@ -23,6 +24,7 @@ from config.data import (
     RAW_DATASET,
 )
 from config.root import LOGGING_FORMAT, LOGGING_LEVEL, SEED
+from tqdm.auto import tqdm
 
 # Initialize logger for this file
 logger = logging.getLogger(__name__)
@@ -41,37 +43,45 @@ class PreProcessDataset:
         else:
             self.dataset_location = RAW_DATASET
 
-        self.dataset = pd.read_csv(self.dataset_location, delimiter="\t")
+        self.dataset = {"feature": [], "key": []}
+
+    def write_to_dataset(row):
+        row["Question"] = [t.text for t in nlp(row["Question"].replace(".","").strip())]
+        answer = [t.text for t in nlp(row["answer"].replace(".","").strip())]
+        i = 0
+        label = []
+
+        while row["Question"] and answer:
+            if row["Question"][-1] == answer[-1]:
+                row["Question"].pop()
+                answer.pop()
+            elif row["Question"][-1] == "_":
+                row["Question"].pop()
+                while row["Question"] and answer and (row["Question"][-1] != answer[-1]):
+                    print(row["Question"], answer)
+                    label.append(answer.pop())
+                break
+
+        if not label:
+            while answer:
+                label.append(answer.pop())
+
+        dataset["feature"].append(row["answer"].lstrip().strip())
+        dataset["key"].append(" ".join(reversed(label)))
 
     def preprocess(self):
         """Preprocesses the dataset"""
-        # Changing ____ to <blank/> tags
-        self.dataset["Question"] = self.dataset["Question"].str.replace(
-            r"[_]{2,}", "<blank>"
-        )
-        # Removing brackets
-        self.dataset["Question"] = self.dataset["Question"].str.replace(r"[\)\(]", "")
-        # Stripping whitespaces
-        self.dataset["Question"] = self.dataset["Question"].apply(lambda x: x.strip())
-        # Replacing / to <slash/> tags
-        self.dataset["Question"] = self.dataset["Question"].str.replace(
-            r"\/", "<slash>"
-        )
 
-        if not os.path.exists(os.path.join(DATASET_FOLDER, PROCESSED_DATASET_FOLDER)):
-            os.mkdir(os.path.join(DATASET_FOLDER, PROCESSED_DATASET_FOLDER))
+        with open(self.dataset_location) as csv_file:
+            csv_reader = csv.DictReader(csv_file, delimiter='\t')
+            for row in tqdm(csv_reader, total=len(csv_reader):
+                if "_" in row["Question"]:
+                    row["Question"] = re.sub(r"[_]{2,}", "_", row["Question"])
 
-        # self.dataset["label"] = (
-        #     " <Q_S> "
-        #     + self.dataset["Question"]
-        #     + " </Q_S> "
-        #     + " <K_S> "
-        #     + self.dataset["key"]
-        #     + " </K_S> "
-        #     + " <A_S> "
-        #     + self.dataset["answer"]
-        #     + " </A_S> "
-        # )
+                self.write_to_dataset(row)
+
+        logger.debug("DataSet Preprocessed Successfully!")
+
 
         self.trainset, self.testset = train_test_split(
             self.dataset, test_size=0.15, random_state=SEED
