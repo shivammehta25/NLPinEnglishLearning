@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=LOGGING_LEVEL, format=LOGGING_FORMAT)
 
 
-class GrammarDasetMultiTag:
+class GrammarDasetAnswerKey:
     def __init__(self):
 
         self.dataset_location = PROCESSED_DATASET
@@ -94,4 +94,4 @@ class GrammarDasetMultiTag:
 
 if __name__ == "__main__":
     # TODO: remove this
-    print(GrammarDasetMultiTag.get_iterators(64))
+    print(GrammarDasetAnswerKey.get_iterators(64))
