@@ -21,7 +21,19 @@ def train(model, iterator, optimizer, criterion):
 
         text, text_lengths = batch.answer
 
-        predictions = model(text, text_lengths).squeeze(1)
+        print("Text Input: {}".format(text.shape))
+
+        predictions = model(text, text_lengths)
+
+        print("Predictions: {}".format(predictions.shape))
+
+        key, key_lengths = batch.key
+
+        key = key.unsqueeze(2)
+
+        print(f"key: {key.shape}, {key}")
+
+        exit(0)
 
         loss = criterion(predictions, batch.label)
 

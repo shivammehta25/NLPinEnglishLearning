@@ -31,8 +31,12 @@ class GrammarDasetAnswerKey:
 
         self.dataset_location = PROCESSED_DATASET
 
-        self.answer = data.Field(tokenize=tokenizer, include_lengths=True)
-        self.key = data.Field(tokenize=tokenizer, include_lengths=True)
+        self.answer = data.Field(
+            tokenize=tokenizer, include_lengths=True, batch_first=True
+        )
+        self.key = data.Field(
+            tokenize=tokenizer, include_lengths=True, batch_first=True
+        )
 
         self.fields = None
         self.trainset = None
@@ -90,8 +94,3 @@ class GrammarDasetAnswerKey:
         logger.debug("Created Iterators")
 
         return grammar_dataset
-
-
-if __name__ == "__main__":
-    # TODO: remove this
-    print(GrammarDasetAnswerKey.get_iterators(64))
