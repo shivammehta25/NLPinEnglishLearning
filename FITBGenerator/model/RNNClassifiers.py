@@ -61,10 +61,6 @@ class RNNHiddenClassifier(nn.Module):
 
         output, output_lengths = nn.utils.rnn.pad_packed_sequence(packed_output)
 
-        print(output.shape, output_lengths)
-
-        exit(0)
-
         if self.bidirectional:
             hidden = self.dropout(
                 torch.cat((hidden[-2, :, :], hidden[-1, :, :]), dim=1)
@@ -72,7 +68,11 @@ class RNNHiddenClassifier(nn.Module):
         else:
             hidden = self.dropout(hidden[-1, :, :])
 
-        return self.fc(hidden)
+        output = self.fc(hidden)
+
+        exit(0)
+
+        return
 
 
 class RNNMaxpoolClassifier(nn.Module):
