@@ -36,7 +36,7 @@ from config.root import (
     SEED,
 )
 from datasetloader import GrammarDasetAnswerKey
-from helperfunctions import evaluate, train, train_tag_model, evaluate_tag_model
+from helperfunctions import evaluate, train
 from model import RNNHiddenClassifier
 from utility import categorical_accuracy, epoch_time
 

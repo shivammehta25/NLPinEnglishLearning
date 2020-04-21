@@ -19,7 +19,7 @@ def train(model, iterator, optimizer, criterion):
 
         optimizer.zero_grad()
 
-        text, text_lengths = batch.text
+        text, text_lengths = batch.answer
 
         predictions = model(text, text_lengths).squeeze(1)
 
@@ -37,7 +37,7 @@ def train(model, iterator, optimizer, criterion):
     return epoch_loss / len(iterator), epoch_acc / len(iterator)
 
 
-def evaluate(model, iterator, criterion, dataset_tag):
+def evaluate(model, iterator, criterion):
     epoch_loss = 0
     epoch_acc = 0
 
@@ -47,7 +47,7 @@ def evaluate(model, iterator, criterion, dataset_tag):
 
         for batch in tqdm(iterator, total=len(iterator)):
 
-            text, text_lengths = batch.text
+            text, text_lengths = batch.answer
 
             predictions = model(text, text_lengths).squeeze(1)
 
