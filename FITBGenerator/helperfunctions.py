@@ -5,7 +5,7 @@ Helper Functions containing training and evaluation methods
 import torch
 import numpy as np
 from tqdm.auto import tqdm
-from utility import categorical_accuracy
+from utility import categorical_accuracy, binary_accuracy
 from config.root import device
 
 
@@ -21,25 +21,40 @@ def train(model, iterator, optimizer, criterion):
         optimizer.zero_grad()
 
         text, text_lengths = batch.answer
+        max_len = text.shape[1]
 
         print("Text Input: {}".format(text.shape))
 
         predictions = model(text, text_lengths)
 
         print("Predictions: {}".format(predictions.shape))
-        print(f"Prediction: {predictions[0]}")
 
-        key, key_lengths = batch.key
+        key, _ = batch.key
 
-        key = torch.from_numpy(np.where(np.isin(text.numpy(), key.numpy()), 1, 0))
+        key = (
+            torch.from_numpy(
+                np.where(np.isin(text.cpu().numpy(), key.cpu().numpy()), 1, 0)
+            )
+            .to(device)
+            .unsqueeze(2)
+        )
 
-        print(f"key: {key.shape}, {key}")
+        mask = (
+            (
+                torch.arange(max_len, device=device).expand(len(text_lengths), max_len)
+                < text_lengths.unsqueeze(1)
+            )
+            .float()
+            .unsqueeze(2)
+        )
 
-        exit(0)
+        print(f"Mask: {mask.shape}")
 
-        loss = criterion(predictions, batch.label)
+        print(f"key: {key.shape}")
 
-        acc = categorical_accuracy(predictions, batch.label)
+        loss = criterion(predictions, key, weight=mask)
+
+        acc = binary_accuracy(predictions, predictions)
 
         loss.backward()
 

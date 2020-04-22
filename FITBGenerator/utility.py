@@ -10,9 +10,12 @@ import torch
 nlp = spacy.load("en")
 
 
-
 def isin(ar1, ar2):
+    """
+    Takes two torch tensors as input and returns 
+    """
     return (ar1[..., None] == ar2).any(-1)
+
 
 def epoch_time(start_time, end_time):
     elapsed_time = end_time - start_time
@@ -61,3 +64,14 @@ def categorical_accuracy(preds, y):
     max_preds = preds.argmax(dim=1, keepdim=True)
     correct = max_preds.squeeze(1).eq(y)
     return correct.sum() / torch.FloatTensor([y.shape[0]])
+
+
+def binary_accuracy(preds, y):
+    """
+    Returns accuracy per batch, i.e. if you get 8/10 right, this returns 0.8, NOT 8
+    """
+
+    rounded_preds = torch.round(torch.sigmoid(preds, dim=2), dim=2)
+    correct = (rounded_preds == y).float()  # convert into float for division
+    acc = correct.sum() / len(correct)
+    return acc

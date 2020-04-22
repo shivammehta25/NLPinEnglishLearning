@@ -241,7 +241,7 @@ if __name__ == "__main__":
             args.linear_hidden_dim,
         )
 
-    criterion = nn.BCEWithLogitsLoss()
+    criterion = nn.BCEWithLogitsLoss
     optimizer = optim.Adam(
         model.parameters(), lr=LR, weight_decay=args.l2_regularization
     )
