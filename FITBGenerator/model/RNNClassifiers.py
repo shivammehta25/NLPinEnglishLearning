@@ -86,8 +86,6 @@ class RNNHiddenClassifier(nn.Module):
 
         output, output_lengths, hidden = self.rnn(embedded, text_lengths)
 
-        print(output.shape)
-
         output = self.fc(output)
 
         return output

@@ -39,6 +39,7 @@ from datasetloader import GrammarDasetAnswerKey
 from helperfunctions import evaluate, train
 from model import RNNHiddenClassifier
 from utility import categorical_accuracy, epoch_time
+from lossfunction import BCEWithLogitLossWithMask
 
 # Initialize logger for this file
 logger = logging.getLogger(__name__)
@@ -241,7 +242,7 @@ if __name__ == "__main__":
             args.linear_hidden_dim,
         )
 
-    criterion = nn.BCEWithLogitsLoss
+    criterion = BCEWithLogitLossWithMask()
     optimizer = optim.Adam(
         model.parameters(), lr=LR, weight_decay=args.l2_regularization
     )
