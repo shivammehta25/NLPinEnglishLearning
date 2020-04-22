@@ -19,7 +19,7 @@ from config.data import (
 )
 from config.hyperparameters import BATCH_SIZE, MAX_VOCAB
 from config.root import LOGGING_FORMAT, LOGGING_LEVEL, device
-from utility import tokenizer
+from utility import tokenizer, isin
 
 # Initialize logger for this file
 logger = logging.getLogger(__name__)

@@ -16,7 +16,8 @@ logging.basicConfig(level=LOGGING_LEVEL, format=LOGGING_FORMAT)
 
 class LSTMWithPackPaddedSequences(nn.Module):
     def __init__(self, embedding_dim, hidden_dim, num_layers, bidirectional, dropout):
-        super.__init__()
+
+        super().__init__()
 
         self.rnn = nn.LSTM(
             embedding_dim,
@@ -28,15 +29,15 @@ class LSTMWithPackPaddedSequences(nn.Module):
 
     def forward(self, embedded, text_lengths):
 
-        self.embedding.permute(1, 0, 2)
+        embedded = embedded.permute(1, 0, 2)
 
         packed_embedded = nn.utils.rnn.pack_padded_sequence(embedded, text_lengths)
 
-        packed_output, (hidden, cell) = self.rnn(packed_embedded)
+        packed_output, (hidden, _) = self.rnn(packed_embedded)
 
         output, output_lengths = nn.utils.rnn.pad_packed_sequence(packed_output)
 
-        self.embedding.premute(1, 0, 2)
+        output = output.permute(1, 0, 2)
 
         return output, output_lengths, hidden
 
@@ -72,7 +73,10 @@ class RNNHiddenClassifier(nn.Module):
             dropout=dropout,
         )
 
-        self.fc = nn.Linear(hidden_dim, output_dim)
+        if bidirectional:
+            self.fc = nn.Linear(2 * hidden_dim, output_dim)
+        else:
+            self.fc = nn.Linear(hidden_dim, output_dim)
 
         self.dropout = nn.Dropout(dropout)
 

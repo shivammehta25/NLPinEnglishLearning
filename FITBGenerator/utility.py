@@ -10,6 +10,10 @@ import torch
 nlp = spacy.load("en")
 
 
+
+def isin(ar1, ar2):
+    return (ar1[..., None] == ar2).any(-1)
+
 def epoch_time(start_time, end_time):
     elapsed_time = end_time - start_time
     elapsed_mins = int(elapsed_time / 60)

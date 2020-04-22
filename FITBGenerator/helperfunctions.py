@@ -3,6 +3,7 @@ Helper Functions containing training and evaluation methods
 """
 
 import torch
+import numpy as np
 from tqdm.auto import tqdm
 from utility import categorical_accuracy
 from config.root import device
@@ -26,10 +27,11 @@ def train(model, iterator, optimizer, criterion):
         predictions = model(text, text_lengths)
 
         print("Predictions: {}".format(predictions.shape))
+        print(f"Prediction: {predictions[0]}")
 
         key, key_lengths = batch.key
 
-        key = key.unsqueeze(2)
+        key = torch.from_numpy(np.where(np.isin(text.numpy(), key.numpy()), 1, 0))
 
         print(f"key: {key.shape}, {key}")
 
