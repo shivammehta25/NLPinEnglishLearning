@@ -19,4 +19,4 @@ class BCEWithLogitLossWithMask(nn.Module):
         @param y: Label Values
         @param mask: Mask of input lengths
         """
-        return F.binary_cross_entropy_with_logits(prediction, y, weight=mask)
+        return F.binary_cross_entropy_with_logits(prediction, y, weight=mask[0])

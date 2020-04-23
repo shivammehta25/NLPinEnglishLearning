@@ -99,6 +99,12 @@ class PreProcessDataset:
         self.testset.to_csv(PROCESSED_DATASET["test"], index=False, sep="\t")
 
         logger.debug(
+            "Trainset Size: {}, Tesetset Size: {}".format(
+                self.trainset.shape, self.testset.shape
+            )
+        )
+
+        logger.debug(
             "Saving the file preprocessed files to : {}".format(
                 PROCESSED_DATASET_FOLDER
             )

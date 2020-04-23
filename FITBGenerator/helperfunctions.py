@@ -28,9 +28,9 @@ def train(model, iterator, optimizer, criterion):
 
         mask, key = get_mask_key_from_batch(batch, text, max_len, text_lengths)
 
-        loss = F.binary_cross_entropy_with_logits(predictions, key, weight=mask)
+        loss = criterion(predictions, key, mask)
 
-        acc = binary_accuracy(predictions, predictions)
+        acc = binary_accuracy(predictions, key, mask)
 
         loss.backward()
 
@@ -79,9 +79,9 @@ def evaluate(model, iterator, criterion):
 
             mask, key = get_mask_key_from_batch(batch, text, max_len, text_lengths)
 
-            loss = F.binary_cross_entropy_with_logits(predictions, key, weight=mask)
+            loss = criterion(predictions, key, mask)
 
-            acc = binary_accuracy(predictions, key)
+            acc = binary_accuracy(predictions, key, mask)
 
             epoch_loss += loss.item()
             epoch_acc += acc.item()
