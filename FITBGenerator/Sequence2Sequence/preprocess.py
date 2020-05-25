@@ -12,6 +12,7 @@ import logging
 import os
 import re
 import time
+import shutil
 
 import numpy as np
 import pandas as pd
@@ -94,7 +95,7 @@ class PreProcessDataset:
             sep="\t",
             header=False,
         )
-        self.testset["question"].to_csv(
+        self.trainset["question"].to_csv(
             "{}.question".format(PROCESSED_DATASET["train"]),
             index=False,
             sep="\t",
@@ -129,13 +130,19 @@ class PreProcessDataset:
         logger.info(
             "Running FairSeq Preprocessing to convert files into fairseq binaries"
         )
+
+        if os.path.exists(FAIRSEQ_PREPROCESSED_DATASET):
+            logger.debug("Old Binaries present deleting them")
+            shutil.rmtree(FAIRSEQ_PREPROCESSED_DATASET)
+            logger.debug("Deleted old binaries now generating new one's")
+
         pre_process_command = "fairseq-preprocess --source-lang sentence --target-lang question \
                               --trainpref {} --testpref {} \
                               --validpref {} --destdir {} --seed {} \
                               --nwordssrc 5000 --nwordstgt 5000".format(
             PROCESSED_DATASET["train"],
-            PROCESSED_DATASET["valid"],
             PROCESSED_DATASET["test"],
+            PROCESSED_DATASET["valid"],
             FAIRSEQ_PREPROCESSED_DATASET,
             SEED,
         )
