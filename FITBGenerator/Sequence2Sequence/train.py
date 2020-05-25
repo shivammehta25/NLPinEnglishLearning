@@ -13,7 +13,7 @@ from config.data import FAIRSEQ_PREPROCESSED_DATASET
 
 def train(model_name):
     if model_name == "LSTM":
-        command = "!CUDA_VISIBLE_DEVICES=0 fairseq-train {}  --clip-norm 5 --batch-size 64 \
+        command = "CUDA_VISIBLE_DEVICES=0 fairseq-train {}  --clip-norm 5 --batch-size 64 \
                     --save-dir checkpoints/lstm --arch lstm --max-epoch 15 --encoder-hidden-size 258 \
                     --encoder-layers 2  --decoder-hidden-size 258 --decoder-layers 2 --optimizer adam --lr 0.001  \
                     --dropout 0.3 --encoder-embed-path glove.6B.300d.txt --encoder-bidirectional --encoder-embed-dim 300 \
@@ -22,7 +22,7 @@ def train(model_name):
             FAIRSEQ_PREPROCESSED_DATASET
         )
     elif model_name == "CNN":
-        command = "!CUDA_VISIBLE_DEVICES=0 fairseq-train {} --batch-size 64 \
+        command = "CUDA_VISIBLE_DEVICES=0 fairseq-train {} --batch-size 64 \
                     --save-dir checkpoints/conv --arch fconv_iwslt_de_en --max-epoch 15 \
                     --optimizer adam --lr 0.001  \
                     --dropout 0.3 --encoder-embed-path glove.6B.300d.txt --encoder-embed-dim 300 \
