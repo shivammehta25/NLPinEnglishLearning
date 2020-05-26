@@ -19,7 +19,8 @@ cd Sequence_2_sequence_Generation/Baseline
 ```zsh
 python preprocessing.py --help
 ```
-```zsh
+Options
+```
 preprocessing.py [-h] [-d DATASET] [-m MODE] [-f]
 
 Utility to Preprocess datasets currently available datasets: SQUAD
@@ -41,7 +42,7 @@ python preprocessing.py
 python train.py --help
 ```
 Options
-```zsh
+```
 usage: train.py [-h] [-d DATASET] [-m MODEL] [-c CLIPNORM] [-l LEARNINGRATE]
                 [-v] [-e EPOCHS] [-t TEACHERFORCING] [-tmp TRAINED_MODEL_PATH]
 
@@ -76,7 +77,7 @@ cd Sequence_2_sequence_Generation/FairSeq_models
 python preprocess.py
 ```
 Options
-```zsh
+```
 usage: preprocess.py [-h] [-l LOCATION]
 
 Utility to preprocess the dataset
@@ -92,7 +93,7 @@ optional arguments:
 python train.py --help
 ```
 Options
-```zsh
+```
 usage: train.py [-h] [-m {LSTM,CNN,Transformer}] [-n NUM_EPOCHS]
                 [-b BATCH_SIZE]
 
@@ -112,7 +113,8 @@ optional arguments:
 ```zsh
 python generate.py --help
 ```
-```zsh
+Options
+```
 usage: generate.py [-h] [-m {LSTM,CNN}] [-sm {best,last}] [-b BATCH_SIZE]
 
 Utility to Generate Sentences from Test Set
@@ -148,7 +150,7 @@ Detailed commands can be found in DeepLearningClassifiers.ipynb notebook
 python preprocessdata.py --help
 ```
 Options
-```zsh
+```
 usage: preprocessdata.py [-h] [-l LOCATION]
 
 Utility to preprocess the dataset
@@ -174,7 +176,7 @@ cd FITBGenerator/SequenceClassification
 python preprocessdata.py
 ```
 Options:
-```zsh
+```
 usage: preprocessdata.py [-h] [-l LOCATION]
 
 Utility to preprocess the dataset
@@ -190,7 +192,7 @@ optional arguments:
 python train.py --help
 ```
 Options: 
-```zsh
+```
 usage: train.py [-h] [-s SEED] [-loc MODEL_LOCATION] [-b BIDIRECTIONAL]
                 [-d DROPOUT] [-e EMBEDDING_DIM] [-hd HIDDEN_DIM] [-l N_LAYERS]
                 [-lr LEARNING_RATE] [-n EPOCHS] [-batch BATCH_SIZE]
@@ -243,7 +245,7 @@ cd FITBGenerator/Sequence2Sequence
 python preprocess.py --help
 ```
 Options:
-```zsh
+```
 usage: preprocess.py [-h] [-l LOCATION]
 
 Utility to preprocess the dataset
@@ -259,7 +261,7 @@ optional arguments:
 python train.py --help
 ```
 Options:
-```zsh
+```
 usage: train.py [-h] [-m {LSTM,CNN}] [-n NUM_EPOCHS] [-b BATCH_SIZE]
 
 Utility to Train the model
