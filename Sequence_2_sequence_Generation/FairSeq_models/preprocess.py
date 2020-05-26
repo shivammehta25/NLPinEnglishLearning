@@ -58,31 +58,34 @@ class PreProcessDataset:
 
         # shutil.copyfile(original, target)
 
+        if not os.path.exists(os.path.join(DATASET_FOLDER, PROCESSED_DATASET_FOLDER)):
+            os.mkdir(os.path.join(DATASET_FOLDER, PROCESSED_DATASET_FOLDER))
+
         shutil.copyfile(
             os.path.join(self.dataset_location, RAW_DATASET_FILENAMES["train"][0]),
-            PROCESSED_DATASET + ".sentence",
+            PROCESSED_DATASET["train"] + ".sentence",
         )
         shutil.copyfile(
             os.path.join(self.dataset_location, RAW_DATASET_FILENAMES["train"][1]),
-            PROCESSED_DATASET + ".question",
+            PROCESSED_DATASET["train"] + ".question",
         )
 
         shutil.copyfile(
             os.path.join(self.dataset_location, RAW_DATASET_FILENAMES["valid"][0]),
-            PROCESSED_DATASET + ".sentence",
+            PROCESSED_DATASET["valid"] + ".sentence",
         )
         shutil.copyfile(
             os.path.join(self.dataset_location, RAW_DATASET_FILENAMES["valid"][1]),
-            PROCESSED_DATASET + ".question",
+            PROCESSED_DATASET["valid"] + ".question",
         )
 
         shutil.copyfile(
             os.path.join(self.dataset_location, RAW_DATASET_FILENAMES["test"][0]),
-            PROCESSED_DATASET + ".sentence",
+            PROCESSED_DATASET["test"] + ".sentence",
         )
         shutil.copyfile(
             os.path.join(self.dataset_location, RAW_DATASET_FILENAMES["test"][1]),
-            PROCESSED_DATASET + ".question",
+            PROCESSED_DATASET["test"] + ".question",
         )
 
         logger.info(
