@@ -22,7 +22,7 @@ def train(model_name, epochs, batch_size):
             FAIRSEQ_PREPROCESSED_DATASET, batch_size, epochs
         )
     elif model_name == "CNN":
-        command = "CUDA_VISIBLE_DEVICES=0 fairseq-train {} --batch-size {}} \
+        command = "CUDA_VISIBLE_DEVICES=0 fairseq-train {} --batch-size {} \
                     --save-dir checkpoints/conv --arch fconv_iwslt_de_en --max-epoch {} \
                     --optimizer adam --lr 0.001  \
                     --dropout 0.3 --encoder-embed-path glove.6B.300d.txt --encoder-embed-dim 300 \
@@ -37,7 +37,7 @@ def train(model_name, epochs, batch_size):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Utility to preprocess the dataset")
+    parser = argparse.ArgumentParser(description="Utility to Train the model")
 
     parser.add_argument(
         "-m",
