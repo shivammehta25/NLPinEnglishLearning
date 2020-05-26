@@ -264,9 +264,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "-t",
         "--tag",
-        default="multi",
+        default="answeronly",
         choices=["multi", "answeronly"],
-        help="Use two different dataset type, multi type and single type where all are merged into same key ",
+        help="Use two different dataset type, multi type and Answer only",
     )
 
     parser.add_argument(
