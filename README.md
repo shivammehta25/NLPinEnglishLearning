@@ -1,4 +1,4 @@
-# QuestionGenerator
+# Application of Natural Language Processing in English Grammar Exercises
 
 In this directory we will perform experimentation to deal with two learning problems:
 * Reading Comprehension Exercise Generation
