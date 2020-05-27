@@ -162,6 +162,58 @@ optional arguments:
                         be used
 ```
 
+**Train**
+```zsh
+python train.py --help
+```
+Options:
+```
+usage: train.py [-h] [-s SEED] [-loc MODEL_LOCATION] [-b BIDIRECTIONAL]
+                [-d DROPOUT] [-e EMBEDDING_DIM] [-hd HIDDEN_DIM] [-l N_LAYERS]
+                [-lr LEARNING_RATE] [-n EPOCHS] [-batch BATCH_SIZE]
+                [-f FREEZE_EMBEDDINGS] [-t {multi,answeronly}]
+                [-l2 L2_REGULARIZATION]
+                [-m {RNNHiddenClassifier,RNNMaxpoolClassifier,RNNFieldClassifier,CNN2dClassifier,CNN1dClassifier,RNNFieldClassifer,CNN1dExtraLayerClassifier}]
+                [-lhd LINEAR_HIDDEN_DIM]
+
+Utility to train the Model
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -s SEED, --seed SEED  Set custom seed for reproducibility
+  -loc MODEL_LOCATION, --model-location MODEL_LOCATION
+                        Give an already trained model location to use and
+                        train more epochs on it
+  -b BIDIRECTIONAL, --bidirectional BIDIRECTIONAL
+                        Makes the model Bidirectional
+  -d DROPOUT, --dropout DROPOUT
+                        Dropout count for the model
+  -e EMBEDDING_DIM, --embedding-dim EMBEDDING_DIM
+                        Embedding Dimensions
+  -hd HIDDEN_DIM, --hidden-dim HIDDEN_DIM
+                        Hidden dimensions of the RNN
+  -l N_LAYERS, --n-layers N_LAYERS
+                        Number of layers in RNN
+  -lr LEARNING_RATE, --learning-rate LEARNING_RATE
+                        Learning rate of Adam Optimizer
+  -n EPOCHS, --epochs EPOCHS
+                        Number of Epochs to train model
+  -batch BATCH_SIZE, --batch_size BATCH_SIZE
+                        Number of Epochs to train model
+  -f FREEZE_EMBEDDINGS, --freeze-embeddings FREEZE_EMBEDDINGS
+                        Freeze Embeddings of Model
+  -t {multi,answeronly}, --tag {multi,answeronly}
+                        Use two different dataset type, multi type and Answer
+                        only
+  -l2 L2_REGULARIZATION, --l2-regularization L2_REGULARIZATION
+                        Value of alpha in l2 regularization 0 means no
+                        regularization
+  -m {RNNHiddenClassifier,RNNMaxpoolClassifier,RNNFieldClassifier,CNN2dClassifier,CNN1dClassifier,RNNFieldClassifer,CNN1dExtraLayerClassifier}, --model {RNNHiddenClassifier,RNNMaxpoolClassifier,RNNFieldClassifier,CNN2dClassifier,CNN1dClassifier,RNNFieldClassifer,CNN1dExtraLayerClassifier}
+                        select the classifier to train on
+  -lhd LINEAR_HIDDEN_DIM, --linear-hidden-dim LINEAR_HIDDEN_DIM
+                        Freeze Embeddings of Model
+```
+
 ### Fill In The Blank Generation
 
 Detailed commands can be found in Generation_of_Blanks.ipynb notebook
