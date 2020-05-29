@@ -260,10 +260,10 @@ if __name__ == "__main__":
     for epoch in range(int(args.epochs)):
 
         start_time = time.time()
-        train_loss, train_acc = train(
+        train_loss, train_acc, train_f1 = train(
             model, dataset.train_iterator, optimizer, criterion
         )
-        test_loss, test_acc = evaluate(model, dataset.test_iterator, criterion)
+        test_loss, test_acc, test_f1 = evaluate(model, dataset.test_iterator, criterion)
 
         end_time = time.time()
 
@@ -279,3 +279,4 @@ if __name__ == "__main__":
         print(f"Epoch: {epoch+1:02} | Epoch Time: {epoch_mins}m {epoch_secs}s")
         print(f"\tTrain Loss: {train_loss:.3f} | Train Acc: {train_acc*100:.2f}%")
         print(f"\t Val. Loss: {test_loss:.3f} |  Val. Acc: {test_acc*100:.2f}%")
+        print(f"\t Train. F1: {train_f1:.2f} |  Val. F1: {test_f1:.2f}%")

@@ -6,7 +6,7 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 from tqdm.auto import tqdm
-from utility import categorical_accuracy, binary_accuracy
+from utility import categorical_accuracy, binary_accuracy, f1_measure
 from config.root import device
 
 
@@ -14,6 +14,7 @@ def train(model, iterator, optimizer, criterion):
 
     epoch_loss = 0
     epoch_acc = 0
+    epoch_f1 = 0
 
     model.train()
 
@@ -31,15 +32,20 @@ def train(model, iterator, optimizer, criterion):
         loss = criterion(predictions, key, mask)
 
         acc = binary_accuracy(predictions, key, mask)
-
+        f1_score = f1_measure(predictions, key, mask)
         loss.backward()
 
         optimizer.step()
 
         epoch_loss += loss.item()
         epoch_acc += acc.item()
+        epoch_f1 += f1_score
 
-    return epoch_loss / len(iterator), epoch_acc / len(iterator)
+    return (
+        epoch_loss / len(iterator),
+        epoch_acc / len(iterator),
+        epoch_f1 / len(iterator),
+    )
 
 
 def get_mask_key_from_batch(batch, text, max_len, text_lengths):
@@ -66,6 +72,7 @@ def get_mask_key_from_batch(batch, text, max_len, text_lengths):
 def evaluate(model, iterator, criterion):
     epoch_loss = 0
     epoch_acc = 0
+    epoch_f1 = 0
 
     model.eval()
 
@@ -82,8 +89,14 @@ def evaluate(model, iterator, criterion):
             loss = criterion(predictions, key, mask)
 
             acc = binary_accuracy(predictions, key, mask)
+            f1_score = f1_measure(predictions, key, mask)
 
             epoch_loss += loss.item()
             epoch_acc += acc.item()
+            epoch_f1 += f1_score
 
-    return epoch_loss / len(iterator), epoch_acc / len(iterator)
+    return (
+        epoch_loss / len(iterator),
+        epoch_acc / len(iterator),
+        epoch_f1 / len(iterator),
+    )

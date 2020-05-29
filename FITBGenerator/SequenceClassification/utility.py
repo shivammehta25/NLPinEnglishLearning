@@ -6,6 +6,7 @@ import time
 
 import spacy
 import torch
+from sklearn.metrics import f1_score, precision_score, recall_score
 
 nlp = spacy.load("en")
 
@@ -75,3 +76,11 @@ def binary_accuracy(preds, y, mask):
     correct = ((rounded_preds == y) * mask).float()  # convert into float for division
     acc = correct.sum() / mask.sum()
     return acc
+
+
+def f1_measure(preds, y, mask):
+    preds = preds.cpu().to_numpy()
+    y = y.cpu().to_numpy()
+    mask = mask.cpu().to_numpy()
+
+    return f1_score(preds[mask], y[mask])
