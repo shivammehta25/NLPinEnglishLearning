@@ -260,10 +260,12 @@ if __name__ == "__main__":
     for epoch in range(int(args.epochs)):
 
         start_time = time.time()
-        train_loss, train_acc, train_f1 = train(
+        train_loss, train_acc, train_f1, train_precision, train_recall = train(
             model, dataset.train_iterator, optimizer, criterion
         )
-        test_loss, test_acc, test_f1 = evaluate(model, dataset.test_iterator, criterion)
+        test_loss, test_acc, test_f1, test_precision, test_recall = evaluate(
+            model, dataset.test_iterator, criterion
+        )
 
         end_time = time.time()
 
@@ -280,3 +282,7 @@ if __name__ == "__main__":
         print(f"\tTrain Loss: {train_loss:.3f} | Train Acc: {train_acc*100:.2f}%")
         print(f"\t Val. Loss: {test_loss:.3f} |  Val. Acc: {test_acc*100:.2f}%")
         print(f"\t Train. F1: {train_f1:.2f} |  Val. F1: {test_f1:.2f}")
+        print(
+            f"\t Train. Precision: {train_precision:.2f} |  Val. Precision: {test_precision:.2f}"
+        )
+        print(f"\t Train. Recall: {train_recall:.2f} |  Val. Recall: {test_recall:.2f}")
