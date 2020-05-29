@@ -6,7 +6,7 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 from tqdm.auto import tqdm
-from utility import categorical_accuracy, binary_accuracy, f1_measure
+from utility import categorical_accuracy, binary_accuracy, other_evaluations
 from config.root import device
 
 
@@ -15,6 +15,8 @@ def train(model, iterator, optimizer, criterion):
     epoch_loss = 0
     epoch_acc = 0
     epoch_f1 = 0
+    epoch_precision = 0
+    epoch_recall = 0
 
     model.train()
 
@@ -32,7 +34,7 @@ def train(model, iterator, optimizer, criterion):
         loss = criterion(predictions, key, mask)
 
         acc = binary_accuracy(predictions, key, mask)
-        f1_score = f1_measure(predictions, key, mask)
+        f1_score, precision, recall = other_evaluations(predictions, key, mask)
         loss.backward()
 
         optimizer.step()
@@ -40,11 +42,15 @@ def train(model, iterator, optimizer, criterion):
         epoch_loss += loss.item()
         epoch_acc += acc.item()
         epoch_f1 += f1_score
+        epoch_precision += precision
+        epoch_recall += recall
 
     return (
         epoch_loss / len(iterator),
         epoch_acc / len(iterator),
         epoch_f1 / len(iterator),
+        epoch_precision / len(iterator),
+        epoch_recall / len(iterator),
     )
 
 
@@ -73,6 +79,8 @@ def evaluate(model, iterator, criterion):
     epoch_loss = 0
     epoch_acc = 0
     epoch_f1 = 0
+    epoch_precision = 0
+    epoch_recall = 0
 
     model.eval()
 
@@ -89,8 +97,7 @@ def evaluate(model, iterator, criterion):
             loss = criterion(predictions, key, mask)
 
             acc = binary_accuracy(predictions, key, mask)
-            f1_score = f1_measure(predictions, key, mask)
-
+            f1_score, precision, recall = other_evaluations(predictions, key, mask)
             epoch_loss += loss.item()
             epoch_acc += acc.item()
             epoch_f1 += f1_score
@@ -99,4 +106,6 @@ def evaluate(model, iterator, criterion):
         epoch_loss / len(iterator),
         epoch_acc / len(iterator),
         epoch_f1 / len(iterator),
+        epoch_precision / len(iterator),
+        epoch_recall / len(iterator),
     )

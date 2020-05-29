@@ -6,6 +6,7 @@ import time
 
 import spacy
 import torch
+import numpy as np
 from sklearn.metrics import f1_score, precision_score, recall_score
 
 nlp = spacy.load("en")
@@ -78,9 +79,13 @@ def binary_accuracy(preds, y, mask):
     return acc
 
 
-def f1_measure(preds, y, mask):
-    preds = preds.cpu().to_numpy()
-    y = y.cpu().to_numpy()
-    mask = mask.cpu().to_numpy()
-
-    return f1_score(preds[mask], y[mask])
+def other_evaluations(preds, y, mask):
+    """
+    Returns F1, Precision and Recall for the batch
+    """
+    rounded_preds = torch.round(torch.sigmoid(preds))
+    mask = np.array(mask.cpu().detach().numpy(), dtype=np.bool)
+    preds = rounded_preds.cpu().detach().numpy()[mask]
+    y = y.cpu().detach().numpy()[mask]
+    
+    return f1_score(preds, y), precision_score(preds, y), recall_score(preds, y)
