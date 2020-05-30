@@ -101,6 +101,8 @@ def evaluate(model, iterator, criterion):
             epoch_loss += loss.item()
             epoch_acc += acc.item()
             epoch_f1 += f1_score
+            epoch_precision += precision
+            epoch_recall += recall
 
     return (
         epoch_loss / len(iterator),
