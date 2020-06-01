@@ -218,10 +218,10 @@ optional arguments:
 
 Detailed commands can be found in Generation_of_Blanks.ipynb notebook
 
-### Sequence Classification
+### Sequence Labeling
 
 ```zsh
-cd FITBGenerator/SequenceClassification
+cd FITBGenerator/SequenceLabeling
 ```
 #### PreProcess Data
 ```zsh
