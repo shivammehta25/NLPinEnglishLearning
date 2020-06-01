@@ -7,6 +7,8 @@ import time
 import spacy
 import torch
 
+from sklearn.metrics import confusion_matrix
+
 nlp = spacy.load("en")
 
 
@@ -57,3 +59,21 @@ def categorical_accuracy(preds, y):
     max_preds = preds.argmax(dim=1, keepdim=True)
     correct = max_preds.squeeze(1).eq(y)
     return correct.sum() / torch.FloatTensor([y.shape[0]])
+
+
+def precision_recall_f1(preds, y):
+    """
+    Returns accuracy per batch
+    """
+    max_preds = preds.argmax(dim=1, keepdim=True)
+    correct = max_preds.squeeze(1).eq(y)
+    return correct.sum() / torch.FloatTensor([y.shape[0]])
+
+
+def other_evaluations(preds, y):
+    """
+    Returns F1, Precision and Recall for the batch
+    """
+    preds = preds.argmax(dim=1, keepdim=True)
+
+    print(confusion_matrix(preds.cpu().detach().numpy(), y.cpu().detach().numpy()))
