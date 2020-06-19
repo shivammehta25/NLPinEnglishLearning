@@ -4,7 +4,7 @@ Helper Functions containing training and evaluation methods
 
 import torch
 from tqdm.auto import tqdm
-from utility import categorical_accuracy
+from utility import categorical_accuracy, other_evaluations
 from config.root import device
 
 
@@ -72,6 +72,8 @@ def evaluate(model, iterator, criterion, dataset_tag):
             loss = criterion(predictions, batch.label)
 
             acc = categorical_accuracy(predictions, batch.label)
+
+
 
             epoch_loss += loss.item()
             epoch_acc += acc.item()
